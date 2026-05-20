@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MARAL — Sistema Ganadero</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0a1a0a;--bg2:#0f2410;--card:#1a3318;--border:#2a4a28;--border2:#1e3a1c;--green:#4caf50;--green-light:#81c784;--green-dim:#2d5a2b;--amber:#ffb74d;--red:#ef5350;--text:#e8f5e9;--text2:#9ec69e;--text3:#5a8a5a;--accent:#76ff03}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden}
+.app{max-width:420px;margin:0 auto;height:100vh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.screen{flex:1;overflow-y:auto;padding-bottom:80px}.screen::-webkit-scrollbar{display:none}
+.nav{position:absolute;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);display:flex;z-index:100}
+.nav-btn{flex:1;padding:10px 0 8px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav-icon{font-size:22px;line-height:1}
+.nav-label{font-size:9px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
+.nav-btn.active .nav-label{color:var(--accent)}
+.header{padding:20px 18px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.header-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-.02em}
+.header-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.logo-mark{font-size:28px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 18px 0}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+.metric-icon{font-size:22px;margin-bottom:6px}
+.metric-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;line-height:1}
+.metric-label{font-size:11px;color:var(--text3);margin-top:3px}
+.metric-sub{font-size:10px;color:var(--text3);opacity:.7}
+.stitle{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:18px 18px 8px}
+.alert{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;margin:0 18px 8px}
+.aw{background:#1a120a;border:1px solid #4a3010}
+.ai{background:#0a1220;border:1px solid #10304a}
+.aok{background:#0a1a0a;border:1px solid #1a5a1a}
+.alert-icon{font-size:20px;flex-shrink:0}
+.alert-title{font-size:13px;font-weight:600}
+.alert-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.lc{margin:0 18px 10px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;cursor:pointer}
+.lh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.lid{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.badge{font-size:10px;padding:3px 10px;border-radius:20px;font-family:'Syne',sans-serif;font-weight:700}
+.bg{background:#0d2a0d;color:#66bb6a}.ba{background:#1a0f00;color:#ffb74d}.bb{background:#0a0f1a;color:#64b5f6}
+.ls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.lsl{font-size:10px;color:var(--text3)}.lsv{font-size:13px;font-weight:600;margin-top:1px}
+.prog{height:3px;background:var(--bg);border-radius:2px;overflow:hidden}
+.pf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--green-dim),var(--green))}
+.ediv{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:14px 18px 6px;display:flex;align-items:center;gap:8px}
+.ediv::after{content:'';flex:1;height:1px;background:var(--border)}
+.trow{display:flex;gap:8px;padding:0 18px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.tbtn{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:12px;font-family:'Syne',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap}
+.tbtn.act{background:var(--green-dim);color:var(--accent);border-color:var(--green)}
+.fg{margin:0 18px 14px}
+.fl{font-size:11px;color:var(--text3);display:block;margin-bottom:5px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.fi{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:15px;font-family:'DM Sans',sans-serif;outline:none}
+.fi:focus{border-color:var(--green)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 18px 14px}
+.fr .fg{margin:0}
+.btnp{display:block;width:calc(100% - 36px);margin:4px 18px;padding:15px;border-radius:14px;border:none;background:var(--green-dim);color:var(--accent);font-size:15px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:.04em;cursor:pointer;text-transform:uppercase}
+.btnp.ok{background:#0d3a0d;color:#66ff66}
+.kb{margin:0 18px 12px;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.kr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border2)}
+.kr:last-child{border-bottom:none}
+.kk{font-size:13px;color:var(--text2)}.kv{font-size:13px;font-weight:600;font-family:'Syne',sans-serif}
+.kv.good{color:#66bb6a}.kv.warn{color:var(--amber)}.kv.bad{color:var(--red)}
+.er{margin:0 18px 12px;border-radius:16px;padding:16px;border:1px solid}
+.eg{background:#0a1a0a;border-color:#2d5a2d}.ea{background:#1a0f00;border-color:#5a3a00}.erd{background:#1a0505;border-color:#5a1010}
+.ev{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px}
+.es{font-size:12px;color:var(--text3)}
+.pm{margin:0 18px 12px;background:#0a1a08;border:1px solid #2d5a1b;border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.pml{font-size:11px;color:var(--text3);font-family:'Syne',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.pmv{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent)}
+.dtog{display:flex;gap:8px;margin:0 18px 16px}
+.dbtn{flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;text-align:center}
+.dbtn.act{background:var(--green-dim);color:var(--accent);border-color:var(--green)}
+.sc{margin:0 18px 10px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+.sn{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:12px}
+.sr2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.si{background:var(--bg2);border-radius:10px;padding:10px 12px}
+.sil{font-size:10px;color:var(--text3);margin-bottom:3px}
+.siv{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.screen>*{animation:fu .2s ease both}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="screen" id="sc"></div>
+  <nav class="nav" id="nav"></nav>
+</div>
+<script>
+const D={u:"Hernán",cfg:{pm:5000,obj:340,adft:1.1,adrc:0.7,ckft:2720,ckrc:1750,da:20},lotes:[
+{id:1,c:"RC-2605-01",e:"Recría",n:11,we:160.5,cc:10592400,fi:"2026-05-11",m:5,h:6,wa:160,lp:null},
+{id:2,c:"RC-2604-01",e:"Recría",n:5,we:184,cc:3896200,fi:"2026-04-29",m:2,h:3,wa:190,lp:null},
+{id:3,c:"RC-2602-02",e:"Recría",n:3,we:239.3,cc:2871200,fi:"2026-02-06",m:0,h:3,wa:210,lp:null},
+{id:4,c:"RC-2603-01-RC",e:"Recría",n:1,we:206.7,cc:1033333,fi:"2026-03-18",m:0,h:1,wa:210,lp:null},
+{id:5,c:"RC-2602-01",e:"Recría",n:1,we:200,cc:700000,fi:"2026-02-06",m:0,h:1,wa:210,lp:null},
+{id:6,c:"RC-2601-02",e:"Recría",n:1,we:140,cc:490000,fi:"2026-01-16",m:1,h:0,wa:160,lp:null},
+{id:7,c:"RC-2601-01",e:"Recría",n:1,we:140,cc:500000,fi:"2026-01-30",m:1,h:0,wa:160,lp:null},
+{id:8,c:"FT-ACTUAL-01",e:"Feedlot",n:8,we:215.8,cc:7769700,fi:"2026-03-20",m:2,h:6,wa:300,lp:null},
+{id:9,c:"RC-2603-01",e:"Feedlot",n:2,we:206.7,cc:2066667,fi:"2026-03-18",m:0,h:2,wa:300,lp:null}
+],kpi:{v:50960500,g:11983777,ks:7080},sal:[{n:"Paco",a:14200000,r:0,col:"#64b5f6"},{n:"Hernán",a:15800000,r:0,col:"#81c784"}]};
+
+let cur="dashboard",ed="feedlot",tr="pesada",fd={},ok=false;
+const $=id=>document.getElementById(id);
+const fmt=n=>n?"$"+Math.round(n).toLocaleString("es-AR"):"—";
+const fmtM=n=>n?"$"+(n/1e6).toFixed(2)+"M":"—";
+const fmtKg=n=>n?Math.round(n).toLocaleString("es-AR")+" kg":"—";
+const dias=f=>f?Math.floor((Date.now()-new Date(f))/864e5):null;
+
+function sDB(){
+  const rc=D.lotes.filter(l=>l.e==="Recría"),ft=D.lotes.filter(l=>l.e==="Feedlot");
+  const aR=rc.reduce((s,l)=>s+l.n,0),aF=ft.reduce((s,l)=>s+l.n,0);
+  const mar=D.kpi.v-D.kpi.g;
+  const al=D.lotes.filter(l=>!l.lp);
+  const ftl=ft.filter(l=>l.wa>=D.cfg.obj-20);
+  return`<div class="header"><div><div class="header-sub">Buenos días,</div><div class="header-title">${D.u}</div></div><div class="logo-mark">🐄</div></div>
+<div style="padding:4px 18px 0;font-size:11px;color:var(--text3)">${new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</div>
+<div class="metrics">
+<div class="metric"><div class="metric-icon">🌾</div><div class="metric-val">${aR}</div><div class="metric-label">Recría</div><div class="metric-sub">${rc.length} lotes</div></div>
+<div class="metric"><div class="metric-icon">🏗</div><div class="metric-val">${aF}</div><div class="metric-label">Feedlot</div><div class="metric-sub">${ft.length} lotes</div></div>
+<div class="metric"><div class="metric-icon">💰</div><div class="metric-val" style="font-size:20px">${fmtM(mar)}</div><div class="metric-label">Margen neto</div><div class="metric-sub">acumulado</div></div>
+<div class="metric"><div class="metric-icon">⚖️</div><div class="metric-val" style="font-size:20px">${fmtKg(D.kpi.ks)}</div><div class="metric-label">Stock vivo</div><div class="metric-sub">estimado</div></div>
+</div>
+<div class="stitle">⚠ Alertas</div>
+${al.length?al.map(l=>`<div class="alert aw"><div class="alert-icon">⚠️</div><div><div class="alert-title">${l.c} — sin pesada</div><div class="alert-sub">${l.n} animales · ${l.e}</div></div></div>`).join(''):`<div class="alert aok"><div class="alert-icon">✅</div><div><div class="alert-title">Sin alertas</div><div class="alert-sub">Todo al día</div></div></div>`}
+${ftl.length?`<div class="stitle">🎯 Próximos a vender</div>${ftl.map(l=>`<div class="alert ai"><div class="alert-icon">📦</div><div><div class="alert-title">${l.c} — ${l.wa}kg prom</div><div class="alert-sub">${l.n} animales · ${dias(l.fi)} días en sistema</div></div></div>`).join('')}`:''}
+<div style="padding:8px 0"></div>`;
+}
+
+function sLotes(){
+  const rc=D.lotes.filter(l=>l.e==="Recría"),ft=D.lotes.filter(l=>l.e==="Feedlot");
+  const card=l=>{
+    const d=dias(l.fi),p=Math.min((l.wa/D.cfg.obj)*100,100);
+    const bc=d<30?"bg":d<90?"ba":"bb";
+    return`<div class="lc" onclick="vL(${l.id})">
+<div class="lh"><div class="lid">${l.c}</div><div class="badge ${bc}">${d} días</div></div>
+<div class="ls"><div><div class="lsl">Animales</div><div class="lsv">${l.n}</div></div><div><div class="lsl">Peso actual</div><div class="lsv">${l.wa}kg</div></div><div><div class="lsl">Costo</div><div class="lsv">${fmtM(l.cc)}</div></div></div>
+<div style="margin-bottom:4px;display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--text3)">Prog. objetivo ${D.cfg.obj}kg</span><span style="font-size:10px;color:var(--text3)">${Math.round(p)}%</span></div>
+<div class="prog"><div class="pf" style="width:${p}%"></div></div></div>`;};
+  return`<div class="header"><div><div class="header-sub">Stock activo</div><div class="header-title">Lotes</div></div><div class="logo-mark">📋</div></div>
+<div class="ediv">🌾 Recría · ${rc.reduce((s,l)=>s+l.n,0)} animales</div>${rc.map(card).join('')}
+<div class="ediv">🏗 Feedlot · ${ft.reduce((s,l)=>s+l.n,0)} animales</div>${ft.map(card).join('')}
+<div style="padding:4px 0"></div>`;
+}
+
+function sCarga(){
+  const opts=D.lotes.map(l=>`<option value="${l.id}">${l.c} (${l.n} an.)</option>`).join('');
+  const hoy=new Date().toISOString().split('T')[0];
+  const tipos=[{id:"pesada",l:"⚖️ Pesada"},{id:"alimento",l:"🌽 Alimento"},{id:"gasto",l:"💸 Gasto"},{id:"movimiento",l:"🔄 Movimiento"},{id:"venta",l:"💵 Venta"}];
+  let f='';
+  if(tr==="pesada")f=`<div class="fr"><div class="fg"><label class="fl">Peso prom (kg)</label><input class="fi" type="number" placeholder="300" id="fp"></div><div class="fg"><label class="fl">Cantidad</label><input class="fi" type="number" id="fc"></div></div><div class="fg" style="margin:0 18px 14px"><label class="fl">¿Estimado?</label><select class="fi" id="fe"><option value="si">Sí — estimado visual</option><option value="no">No — pesada real</option></select></div><div class="fg" style="margin:0 18px 14px"><label class="fl">Observación</label><input class="fi" type="text" placeholder="Opcional" id="fo"></div>`;
+  if(tr==="alimento")f=`<div class="fg" style="margin:0 18px 14px"><label class="fl">Tipo alimento</label><select class="fi" id="fta"><option>Balanceado granel</option><option>Maíz</option><option>Rollo</option><option>Fardo</option><option>Otro</option></select></div><div class="fr"><div class="fg"><label class="fl">Kg cargados</label><input class="fi" type="number" placeholder="150" id="fkg"></div><div class="fg"><label class="fl">Kg sobrante</label><input class="fi" type="number" placeholder="0" id="fso"></div></div><div class="fg" style="margin:0 18px 14px"><label class="fl">Proveedor</label><input class="fi" type="text" placeholder="Durán, Crincoli..." id="for"></div><div class="fg" style="margin:0 18px 14px"><label class="fl">Precio total ($)</label><input class="fi" type="number" id="fpt"></div>`;
+  if(tr==="gasto")f=`<div class="fg" style="margin:0 18px 14px"><label class="fl">Tipo</label><select class="fi" id="ftg"><option>Alimento</option><option>Sanidad</option><option>Flete</option><option>Mano de obra</option><option>Infraestructura</option><option>Agricultura</option><option>Combustible</option><option>Otro</option></select></div><div class="fg" style="margin:0 18px 14px"><label class="fl">Descripción</label><input class="fi" type="text" id="fde"></div><div class="fr"><div class="fg"><label class="fl">Monto ($)</label><input class="fi" type="number" id="fmo"></div><div class="fg"><label class="fl">Pagado por</label><select class="fi" id="fin"><option>Paco</option><option>Hernán</option><option>Ambos</option></select></div></div>`;
+  if(tr==="movimiento")f=`<div class="fg" style="margin:0 18px 14px"><label class="fl">Tipo</label><select class="fi" id="ftm"><option>Cambio parcela</option><option>Pase a feedlot</option><option>Pase a recría</option><option>División de lote</option></select></div><div class="fr"><div class="fg"><label class="fl">Desde</label><input class="fi" type="text" id="fde2"></div><div class="fg"><label class="fl">Hacia</label><input class="fi" type="text" id="fha"></div></div><div class="fg" style="margin:0 18px 14px"><label class="fl">Observación</label><input class="fi" type="text" id="fob"></div>`;
+  if(tr==="venta")f=`<div class="fr"><div class="fg"><label class="fl">Kg brutos</label><input class="fi" type="number" placeholder="1500" id="fkv"></div><div class="fg"><label class="fl">Precio/kg ($)</label><input class="fi" type="number" placeholder="5500" id="fpv"></div></div><div class="fr"><div class="fg"><label class="fl">Desbaste %</label><input class="fi" type="number" value="8" id="fdv"></div><div class="fg"><label class="fl">Cantidad</label><input class="fi" type="number" id="fcv"></div></div><div class="fg" style="margin:0 18px 14px"><label class="fl">Comprador</label><input class="fi" type="text" id="fco"></div>`;
+  return`<div class="header"><div><div class="header-sub">Registro diario</div><div class="header-title">Carga rápida</div></div><div class="logo-mark">➕</div></div>
+<div class="trow">${tipos.map(t=>`<button class="tbtn ${tr===t.id?'act':''}" onclick="sT('${t.id}')">${t.l}</button>`).join('')}</div>
+<div class="fg" style="margin:0 18px 14px"><label class="fl">Lote</label><select class="fi" id="fl">${opts}</select></div>
+<div class="fg" style="margin:0 18px 14px"><label class="fl">Fecha</label><input class="fi" type="date" id="ff" value="${hoy}"></div>
+${f}
+<button class="btnp ${ok?'ok':''}" onclick="guar()">${ok?'✓ GUARDADO':'GUARDAR REGISTRO'}</button>
+<div style="padding:8px 0"></div>`;
+}
+
+function sKPIs(){
+  const mar=D.kpi.v-D.kpi.g,rent=((mar/D.kpi.g)*100).toFixed(1);
+  return`<div class="header"><div><div class="header-sub">Indicadores</div><div class="header-title">KPIs</div></div><div class="logo-mark">📊</div></div>
+<div class="stitle">Productivo</div>
+<div class="kb">
+<div class="kr"><span class="kk">Animales activos</span><span class="kv">33 (23 RC · 10 FT)</span></div>
+<div class="kr"><span class="kk">Stock vivo estimado</span><span class="kv">${fmtKg(D.kpi.ks)}</span></div>
+<div class="kr"><span class="kk">ADPV recría</span><span class="kv warn">Pendiente 1ª pesada</span></div>
+<div class="kr"><span class="kk">ADPV feedlot (hist.)</span><span class="kv good">1,1 kg/día</span></div>
+<div class="kr"><span class="kk">Costo/kg feedlot</span><span class="kv good">${fmt(D.cfg.ckft)}/kg</span></div>
+<div class="kr"><span class="kk">Costo/kg recría</span><span class="kv warn">${fmt(D.cfg.ckrc)}/kg ~est.</span></div>
+<div class="kr"><span class="kk">Próxima pesada</span><span class="kv warn">07/06/2026</span></div>
+</div>
+<div class="stitle">Económico</div>
+<div class="kb">
+<div class="kr"><span class="kk">Ventas acumuladas</span><span class="kv good">${fmtM(D.kpi.v)}</span></div>
+<div class="kr"><span class="kk">Gastos operativos</span><span class="kv">${fmtM(D.kpi.g)}</span></div>
+<div class="kr"><span class="kk">Margen bruto</span><span class="kv good">${fmtM(mar)}</span></div>
+<div class="kr"><span class="kk">Rentabilidad</span><span class="kv good">${rent}%</span></div>
+<div class="kr"><span class="kk">Capital activo</span><span class="kv">${fmtM(29919500)}</span></div>
+<div class="kr"><span class="kk">Precio mercado ref.</span><span class="kv">${fmt(D.cfg.pm)}/kg</span></div>
+</div>
+<div class="stitle">Inversores</div>
+${D.sal.map(s=>`<div class="sc"><div class="sn" style="color:${s.col}">${s.n}</div><div class="sr2"><div class="si"><div class="sil">Aportó</div><div class="siv">${fmtM(s.a)}</div></div><div class="si"><div class="sil">Retiró</div><div class="siv">${fmtM(s.r)}</div></div></div></div>`).join('')}
+<div class="alert ai" style="margin-top:4px"><div class="alert-icon">ℹ️</div><div><div class="alert-title">Diferencia: $1.6M</div><div class="alert-sub">Hernán aportó más. Ajustar en próxima distribución.</div></div></div>
+<div style="padding:4px 0"></div>`;
+}
+
+function sEval(){
+  const tipos=[{id:"recria",l:"🌾 Recría"},{id:"feedlot",l:"🏗 Feedlot"},{id:"ambos",l:"⚡ Comparar"}];
+  return`<div class="header"><div><div class="header-sub">En feria</div><div class="header-title">Evaluador</div></div><div class="logo-mark">🧮</div></div>
+<div class="dtog">${tipos.map(t=>`<button class="dbtn ${ed===t.id?'act':''}" onclick="sD('${t.id}')">${t.l}</button>`).join('')}</div>
+<div class="fr"><div class="fg"><label class="fl">Cantidad</label><input class="fi" type="number" placeholder="10" id="ec" value="${fd.ec||''}"></div><div class="fg"><label class="fl">Precio ofrecido ($/kg)</label><input class="fi" type="number" placeholder="5000" id="ep" value="${fd.ep||''}"></div></div>
+<div class="fr"><div class="fg"><label class="fl">Peso entrada (kg)</label><input class="fi" type="number" placeholder="220" id="ew" value="${fd.ew||''}"></div><div class="fg"><label class="fl">Peso objetivo venta (kg)</label><input class="fi" type="number" placeholder="330" id="epv" value="${fd.epv||''}"></div></div>
+<div class="fg" style="margin:0 18px 16px"><label class="fl">Precio venta estimado ($/kg)</label><input class="fi" type="number" placeholder="5500" id="epventa" value="${fd.epventa||''}"></div>
+<button class="btnp" onclick="eval2()">EVALUAR AHORA ↗</button>
+<div id="eres"></div><div style="padding:4px 0"></div>`;
+}
+
+function sT(t){tr=t;ok=false;render()}
+function sD(d){ed=d;render()}
+
+function guar(){
+  if(tr==="pesada"){
+    const lid=parseInt($('fl').value),p=parseFloat($('fp').value);
+    if(!p)return;
+    const l=D.lotes.find(x=>x.id===lid);
+    if(l){l.wa=p;l.lp=new Date().toISOString().split('T')[0];}
+  }
+  ok=true;render();setTimeout(()=>{ok=false;render();},2500);
+}
+
+function eval2(){
+  const c=parseFloat($('ec').value)||0,p=parseFloat($('ep').value)||0,
+        w=parseFloat($('ew').value)||0,wv=parseFloat($('epv').value)||0,
+        pv=parseFloat($('epventa').value)||0;
+  fd={ec:c,ep:p,ew:w,epv:wv,epventa:pv};
+  if(!c||!p||!w||!wv||!pv||wv<=w)return;
+  const calc=d=>{
+    const ck=d==='recria'?D.cfg.ckrc:D.cfg.ckft,adpv=d==='recria'?D.cfg.adrc:D.cfg.adft;
+    const dC=3,dV=8,com=3,san=1987,flt=2857;
+    const kgNC=w*(1-dC/100),cc=kgNC*p*c,comM=cc*(com/100),ge=(san+flt)*c+comM;
+    const kgG=wv-w,ds=Math.round(kgG/adpv),cp=kgG*ck*c;
+    const kgNV=wv*(1-dV/100)*c,ing=kgNV*pv,ct=cc+ge+cp,mar=ing-ct;
+    const rent=(mar/ct)*100,pmax=(ing/1.10-(san+flt)*c-cp)/(kgNC*c*(1+com/100));
+    return{cc,ge,kgG,ds,cp,kgNV,ing,ct,mar,rent,pmax};
+  };
+  const r=ed==='ambos'?null:calc(ed);
+  const rR=ed==='ambos'?calc('recria'):null,rF=ed==='ambos'?calc('feedlot'):null;
+  const res=ed==='ambos'?(rR.rent>rF.rent?rR:rF):r;
+  const cc=res.rent>=15?'eg':res.rent>=5?'ea':'erd';
+  const tc=res.rent>=15?'#66bb6a':res.rent>=5?'#ffb74d':'#ef5350';
+  const em=res.rent>=15?'✓':res.rent>=5?'⚠':'✗';
+  const vd=res.rent>=15?'Buen negocio — conviene comprar':res.rent>=5?'Margen justo — negociá precio':'No conviene — da pérdida';
+  const det=rr=>`<div class="kb" style="margin-top:12px">${[['Kg a ganar/animal',fmtKg(rr.kgG)],['Días estimados',rr.ds+' días'],['Costo producción',fmt(rr.cp)],['Costo total',fmt(rr.ct)],['Ingreso estimado',fmt(rr.ing)],['Margen total',fmt(rr.mar)],['Margen/animal',fmt(rr.mar/c)],['Rentabilidad',rr.rent.toFixed(1)+'%']].map(([k,v])=>`<div class="kr"><span class="kk">${k}</span><span class="kv">${v}</span></div>`).join('')}</div>`;
+  $('eres').innerHTML=`
+<div style="padding:16px 0 0"></div>
+<div class="er ${cc}"><div class="ev" style="color:${tc}">${em} ${vd}</div><div class="es">Rent: ${res.rent.toFixed(1)}% · Margen/animal: ${fmt(res.mar/c)}</div></div>
+<div class="pm"><div><div class="pml">Precio máximo a pagar</div><div style="font-size:10px;color:var(--text3);margin-top:2px">para ganar al menos 10%</div></div><div class="pmv">${fmt(res.pmax)}/kg</div></div>
+${ed==='ambos'?`<div class="kb"><div class="kr"><span class="kk">🌾 Recría</span><span class="kv ${rR.rent>=15?'good':rR.rent>=5?'warn':'bad'}">${rR.rent.toFixed(1)}% · ${fmt(rR.mar/c)}/animal</span></div><div class="kr"><span class="kk">🏗 Feedlot</span><span class="kv ${rF.rent>=15?'good':rF.rent>=5?'warn':'bad'}">${rF.rent.toFixed(1)}% · ${fmt(rF.mar/c)}/animal</span></div><div class="kr"><span class="kk">Mejor opción</span><span class="kv good">${rR.rent>rF.rent?'🌾 Recría':'🏗 Feedlot'}</span></div></div>`:det(r)}`;
+}
+
+function vL(id){
+  const l=D.lotes.find(x=>x.id===id);if(!l)return;
+  const d=dias(l.fi),p=Math.min((l.wa/D.cfg.obj)*100,100);
+  const kgG=D.cfg.obj-l.wa,adpv=l.e==='Feedlot'?D.cfg.adft:D.cfg.adrc,dO=Math.round(kgG/adpv);
+  $('sc').innerHTML=`
+<div class="header"><div style="display:flex;align-items:center;gap:10px"><button onclick="nav('lotes')" style="background:none;border:none;color:var(--green);font-size:20px;cursor:pointer;padding:0">←</button><div><div class="header-sub">${l.e}</div><div class="header-title">${l.c}</div></div></div></div>
+<div class="metrics" style="padding-top:16px">
+<div class="metric"><div class="metric-icon">${l.e==='Recría'?'🌾':'🏗'}</div><div class="metric-val">${l.n}</div><div class="metric-label">Animales</div><div class="metric-sub">${l.m}M/${l.h}H</div></div>
+<div class="metric"><div class="metric-icon">⚖️</div><div class="metric-val">${l.wa}</div><div class="metric-label">Kg actuales</div><div class="metric-sub">estimado</div></div>
+<div class="metric"><div class="metric-icon">📅</div><div class="metric-val">${d}</div><div class="metric-label">Días</div><div class="metric-sub">en sistema</div></div>
+<div class="metric"><div class="metric-icon">🎯</div><div class="metric-val">${dO}</div><div class="metric-label">Días al obj.</div><div class="metric-sub">${D.cfg.obj}kg</div></div>
+</div>
+<div class="stitle">Progreso al objetivo</div>
+<div style="margin:0 18px 12px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px">
+<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--text3)">Entrada: ${l.we}kg</span><span style="font-size:12px;color:var(--text3)">Objetivo: ${D.cfg.obj}kg</span></div>
+<div class="prog" style="height:8px;margin-bottom:8px"><div class="pf" style="width:${p}%"></div></div>
+<div style="text-align:center;font-family:'Syne',sans-serif;font-size:13px;color:var(--green-light)">${Math.round(p)}% · faltan ${kgG}kg</div>
+</div>
+<div class="stitle">Costos</div>
+<div class="kb">
+<div class="kr"><span class="kk">Costo compra total</span><span class="kv">${fmt(l.cc)}</span></div>
+<div class="kr"><span class="kk">Costo/animal</span><span class="kv">${fmt(l.cc/l.n)}</span></div>
+<div class="kr"><span class="kk">Fecha ingreso</span><span class="kv">${new Date(l.fi).toLocaleDateString('es-AR')}</span></div>
+</div>
+<div style="padding:8px 0"></div>`;
+}
+
+function nav(s){cur=s;render()}
+const NAV=[{id:"dashboard",icon:"🏠",l:"Inicio"},{id:"lotes",icon:"🐄",l:"Lotes"},{id:"carga",icon:"➕",l:"Cargar"},{id:"kpis",icon:"📊",l:"KPIs"},{id:"evaluador",icon:"🧮",l:"Feria"}];
+function render(){
+  const sc={dashboard:sDB,lotes:sLotes,carga:sCarga,kpis:sKPIs,evaluador:sEval};
+  $('sc').innerHTML=(sc[cur]||sDB)();
+  $('nav').innerHTML=NAV.map(n=>`<button class="nav-btn ${cur===n.id?'active':''}" onclick="nav('${n.id}')"><span class="nav-icon">${n.icon}</span><span class="nav-label">${n.l}</span></button>`).join('');
+}
+render();
+</script>
+</body>
+</html>
