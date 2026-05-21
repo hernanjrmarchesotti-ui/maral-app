@@ -87,7 +87,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   <nav class="nav" id="nav"></nav>
 </div>
 <script>
-const SHEET_URL = 'const SHEET_URL = 'https://script.google.com/macros/s/AKfycb.../exec';'; // URL del Web App de Apps Script
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbx1TTi2XZShsyPE6hpN91gfubTwNyufaMTnXOWyyI77rLsjoHaDls92ReTDSPRgnfoZ/exec';
 
 async function sheetPost(hoja, fila) {
   try {
@@ -312,9 +312,4 @@ const NAV=[{id:"dashboard",icon:"🏠",l:"Inicio"},{id:"lotes",icon:"🐄",l:"Lo
 function render(){
   const sc={dashboard:sDB,lotes:sLotes,carga:sCarga,kpis:sKPIs,evaluador:sEval};
   $('sc').innerHTML=(sc[cur]||sDB)();
-  $('nav').innerHTML=NAV.map(n=>`<button class="nav-btn ${cur===n.id?'active':''}" onclick="nav('${n.id}')"><span class="nav-icon">${n.icon}</span><span class="nav-label">${n.l}</span></button>`).join('');
-}
-render();
-</script>
-</body>
-</html>
+  $('nav').innerHTML=NAV.map(n=>`<button class="nav-btn ${cur===n.id?'active':''}" onclick="nav('${n.id}')"><span class="nav-icon">${n.icon}</span><span class="nav-label">${n.l}</span></bu
