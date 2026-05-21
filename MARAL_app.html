@@ -87,6 +87,19 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   <nav class="nav" id="nav"></nav>
 </div>
 <script>
+const SHEET_URL = 'const SHEET_URL = 'https://script.google.com/macros/s/AKfycb.../exec';'; // URL del Web App de Apps Script
+
+async function sheetPost(hoja, fila) {
+  try {
+    const r = await fetch(SHEET_URL, {
+      method: 'POST',
+      body: JSON.stringify({accion: 'agregar', hoja, fila})
+    });
+    const d = await r.json();
+    if (!d.ok) console.error('Sheet error:', d.error);
+  } catch(e) { console.error('Error guardando en sheet:', e); }
+}
+
 const D={u:"Hernán",cfg:{pm:5000,obj:340,adft:1.1,adrc:0.7,ckft:2720,ckrc:1750,da:20},lotes:[
 {id:1,c:"RC-2605-01",e:"Recría",n:11,we:160.5,cc:10592400,fi:"2026-05-11",m:5,h:6,wa:160,lp:null},
 {id:2,c:"RC-2604-01",e:"Recría",n:5,we:184,cc:3896200,fi:"2026-04-29",m:2,h:3,wa:190,lp:null},
@@ -203,13 +216,37 @@ function sEval(){
 function sT(t){tr=t;ok=false;render()}
 function sD(d){ed=d;render()}
 
-function guar(){
+async function guar(){
+  const lid=parseInt($('fl').value),fecha=$('ff').value;
+  const l=D.lotes.find(x=>x.id===lid),cod=l?l.c:'';
+  const ts=new Date().toISOString();
+
   if(tr==="pesada"){
-    const lid=parseInt($('fl').value),p=parseFloat($('fp').value);
+    const p=parseFloat($('fp').value);
     if(!p)return;
-    const l=D.lotes.find(x=>x.id===lid);
-    if(l){l.wa=p;l.lp=new Date().toISOString().split('T')[0];}
+    if(l){l.wa=p;l.lp=fecha;}
+    await sheetPost('04_PESADAS',[fecha,cod,p,$('fc').value||l?.n,$('fe').value,$('fo').value,ts]);
   }
+  else if(tr==="alimento"){
+    const kg=$('fkg').value;
+    if(!kg)return;
+    await sheetPost('07_ALIMENTOS',[fecha,cod,$('fta').value,kg,$('fso').value,$('for').value,$('fpt').value,ts]);
+  }
+  else if(tr==="gasto"){
+    const mo=$('fmo').value;
+    if(!mo)return;
+    await sheetPost('09_GASTOS',[fecha,cod,$('ftg').value,$('fde').value,mo,$('fin').value,ts]);
+  }
+  else if(tr==="movimiento"){
+    await sheetPost('03_MOVIMIENTOS',[fecha,cod,$('ftm').value,$('fde2').value,$('fha').value,$('fob').value,ts]);
+  }
+  else if(tr==="venta"){
+    const kgv=$('fkv').value,ppv=$('fpv').value;
+    if(!kgv||!ppv)return;
+    const des=parseFloat($('fdv').value)||8,neto=Math.round(kgv*(1-des/100)*ppv);
+    await sheetPost('10_VENTAS',[fecha,cod,kgv,ppv,des,$('fcv').value,$('fco').value,neto,ts]);
+  }
+
   ok=true;render();setTimeout(()=>{ok=false;render();},2500);
 }
 
