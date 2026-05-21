@@ -87,18 +87,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   <nav class="nav" id="nav"></nav>
 </div>
 <script>
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbx1TTi2XZShsyPE6hpN91gfubTwNyufaMTnXOWyyI77rLsjoHaDls92ReTDSPRgnfoZ/exec';
-
-async function sheetPost(hoja, fila) {
-  try {
-    const r = await fetch(SHEET_URL, {
-      method: 'POST',
-      body: JSON.stringify({accion: 'agregar', hoja, fila})
-    });
-    const d = await r.json();
-    if (!d.ok) console.error('Sheet error:', d.error);
-  } catch(e) { console.error('Error guardando en sheet:', e); }
-}
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1TTi2XZShsyPE6hpN91gfubTwNyufaMTnXOWyyI77rLsjoHaDls92ReTDSPRgnfoZ/exec";
 
 const D={u:"Hernán",cfg:{pm:5000,obj:340,adft:1.1,adrc:0.7,ckft:2720,ckrc:1750,da:20},lotes:[
 {id:1,c:"RC-2605-01",e:"Recría",n:11,we:160.5,cc:10592400,fi:"2026-05-11",m:5,h:6,wa:160,lp:null},
@@ -217,37 +206,69 @@ function sT(t){tr=t;ok=false;render()}
 function sD(d){ed=d;render()}
 
 async function guar(){
-  const lid=parseInt($('fl').value),fecha=$('ff').value;
-  const l=D.lotes.find(x=>x.id===lid),cod=l?l.c:'';
-  const ts=new Date().toISOString();
+  const loteSel = $('fl') ? $('fl').value : "";
+  const loteObj = D.lotes.find(x => x.id === parseInt(loteSel));
+  const fecha = $('ff') ? $('ff').value : new Date().toISOString().split('T')[0];
 
-  if(tr==="pesada"){
-    const p=parseFloat($('fp').value);
-    if(!p)return;
-    if(l){l.wa=p;l.lp=fecha;}
-    await sheetPost('04_PESADAS',[fecha,cod,p,$('fc').value||l?.n,$('fe').value,$('fo').value,ts]);
+  let payload = {
+    tipo: tr,
+    fecha: fecha,
+    lote_id: loteSel,
+    lote_codigo: loteObj ? loteObj.c : "",
+    usuario: D.u,
+    timestamp: new Date().toISOString()
+  };
+
+  if(tr === "pesada"){
+    payload.peso_promedio = $('fp') ? $('fp').value : "";
+    payload.cantidad = $('fc') ? $('fc').value : "";
+    payload.es_estimado = $('fe') ? $('fe').value : "";
+    payload.observacion = $('fo') ? $('fo').value : "";
+    const p = parseFloat(payload.peso_promedio);
+    if(!p) return;
+    if(loteObj){ loteObj.wa = p; loteObj.lp = fecha; }
   }
-  else if(tr==="alimento"){
-    const kg=$('fkg').value;
-    if(!kg)return;
-    await sheetPost('07_ALIMENTOS',[fecha,cod,$('fta').value,kg,$('fso').value,$('for').value,$('fpt').value,ts]);
+  if(tr === "alimento"){
+    payload.tipo_alimento = $('fta') ? $('fta').value : "";
+    payload.kg_cargados = $('fkg') ? $('fkg').value : "";
+    payload.kg_sobrante = $('fso') ? $('fso').value : "";
+    payload.proveedor = $('for') ? $('for').value : "";
+    payload.precio_total = $('fpt') ? $('fpt').value : "";
   }
-  else if(tr==="gasto"){
-    const mo=$('fmo').value;
-    if(!mo)return;
-    await sheetPost('09_GASTOS',[fecha,cod,$('ftg').value,$('fde').value,mo,$('fin').value,ts]);
+  if(tr === "gasto"){
+    payload.tipo_gasto = $('ftg') ? $('ftg').value : "";
+    payload.descripcion = $('fde') ? $('fde').value : "";
+    payload.monto = $('fmo') ? $('fmo').value : "";
+    payload.pagado_por = $('fin') ? $('fin').value : "";
   }
-  else if(tr==="movimiento"){
-    await sheetPost('03_MOVIMIENTOS',[fecha,cod,$('ftm').value,$('fde2').value,$('fha').value,$('fob').value,ts]);
+  if(tr === "movimiento"){
+    payload.tipo_movimiento = $('ftm') ? $('ftm').value : "";
+    payload.desde = $('fde2') ? $('fde2').value : "";
+    payload.hacia = $('fha') ? $('fha').value : "";
+    payload.observacion = $('fob') ? $('fob').value : "";
   }
-  else if(tr==="venta"){
-    const kgv=$('fkv').value,ppv=$('fpv').value;
-    if(!kgv||!ppv)return;
-    const des=parseFloat($('fdv').value)||8,neto=Math.round(kgv*(1-des/100)*ppv);
-    await sheetPost('10_VENTAS',[fecha,cod,kgv,ppv,des,$('fcv').value,$('fco').value,neto,ts]);
+  if(tr === "venta"){
+    payload.kg_brutos = $('fkv') ? $('fkv').value : "";
+    payload.precio_kg = $('fpv') ? $('fpv').value : "";
+    payload.desbaste = $('fdv') ? $('fdv').value : "";
+    payload.cantidad = $('fcv') ? $('fcv').value : "";
+    payload.comprador = $('fco') ? $('fco').value : "";
   }
 
-  ok=true;render();setTimeout(()=>{ok=false;render();},2500);
+  try{
+    await fetch(WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
+      body: JSON.stringify(payload)
+    });
+    ok = true;
+    render();
+    setTimeout(()=>{ok=false;render();},2500);
+  }catch(err){
+    console.error(err);
+    alert("No se pudo guardar. Revisar conexión.");
+  }
 }
 
 function eval2(){
@@ -312,4 +333,9 @@ const NAV=[{id:"dashboard",icon:"🏠",l:"Inicio"},{id:"lotes",icon:"🐄",l:"Lo
 function render(){
   const sc={dashboard:sDB,lotes:sLotes,carga:sCarga,kpis:sKPIs,evaluador:sEval};
   $('sc').innerHTML=(sc[cur]||sDB)();
-  $('nav').innerHTML=NAV.map(n=>`<button class="nav-btn ${cur===n.id?'active':''}" onclick="nav('${n.id}')"><span class="nav-icon">${n.icon}</span><span class="nav-label">${n.l}</span></bu
+  $('nav').innerHTML=NAV.map(n=>`<button class="nav-btn ${cur===n.id?'active':''}" onclick="nav('${n.id}')"><span class="nav-icon">${n.icon}</span><span class="nav-label">${n.l}</span></button>`).join('');
+}
+render();
+</script>
+</body>
+</html>
