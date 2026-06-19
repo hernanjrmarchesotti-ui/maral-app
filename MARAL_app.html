@@ -77,29 +77,41 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .si{background:var(--bg2);border-radius:10px;padding:10px 12px}
 .sil{font-size:10px;color:var(--text3);margin-bottom:3px}
 .siv{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.sync-bar{position:fixed;top:0;left:50%;transform:translateX(-50%);max-width:420px;width:100%;background:#0d2a0d;border-bottom:1px solid var(--green-dim);padding:6px 16px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;color:var(--green-light);display:flex;align-items:center;gap:8px;z-index:200;transition:opacity .3s}
+.sync-bar.hidden{opacity:0;pointer-events:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin 1s linear infinite}
 @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .screen>*{animation:fu .2s ease both}
 </style>
 </head>
 <body>
 <div class="app">
+  <div class="sync-bar hidden" id="syncBar"><span class="spin">⟳</span><span id="syncMsg">Sincronizando con Sheets...</span></div>
   <div class="screen" id="sc"></div>
   <nav class="nav" id="nav"></nav>
 </div>
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1TTi2XZShsyPE6hpN91gfubTwNyufaMTnXOWyyI77rLsjoHaDls92ReTDSPRgnfoZ/exec";
 
-const D={u:"Hernán",cfg:{pm:5000,obj:340,adft:1.1,adrc:0.7,ckft:2720,ckrc:1750,da:20},lotes:[
-{id:1,c:"RC-2605-01",e:"Recría",n:11,we:160.5,cc:10592400,fi:"2026-05-11",m:5,h:6,wa:160,lp:null},
-{id:2,c:"RC-2604-01",e:"Recría",n:5,we:184,cc:3896200,fi:"2026-04-29",m:2,h:3,wa:190,lp:null},
-{id:3,c:"RC-2602-02",e:"Recría",n:3,we:239.3,cc:2871200,fi:"2026-02-06",m:0,h:3,wa:210,lp:null},
-{id:4,c:"RC-2603-01-RC",e:"Recría",n:1,we:206.7,cc:1033333,fi:"2026-03-18",m:0,h:1,wa:210,lp:null},
-{id:5,c:"RC-2602-01",e:"Recría",n:1,we:200,cc:700000,fi:"2026-02-06",m:0,h:1,wa:210,lp:null},
-{id:6,c:"RC-2601-02",e:"Recría",n:1,we:140,cc:490000,fi:"2026-01-16",m:1,h:0,wa:160,lp:null},
-{id:7,c:"RC-2601-01",e:"Recría",n:1,we:140,cc:500000,fi:"2026-01-30",m:1,h:0,wa:160,lp:null},
-{id:8,c:"FT-ACTUAL-01",e:"Feedlot",n:8,we:215.8,cc:7769700,fi:"2026-03-20",m:2,h:6,wa:300,lp:null},
-{id:9,c:"RC-2603-01",e:"Feedlot",n:2,we:206.7,cc:2066667,fi:"2026-03-18",m:0,h:2,wa:300,lp:null}
-],kpi:{v:50960500,g:11983777,ks:7080},sal:[{n:"Paco",a:14200000,r:0,col:"#64b5f6"},{n:"Hernán",a:15800000,r:0,col:"#81c784"}]};
+// Datos de respaldo (se reemplazan con los de Sheets al cargar)
+let D = {
+  u:"Hernán",
+  cfg:{pm:5000,obj:340,adft:1.1,adrc:0.7,ckft:2720,ckrc:1750,da:20},
+  lotes:[
+    {id:1,c:"RC-2605-01",e:"Recría",n:11,we:160.5,cc:10592400,fi:"2026-05-11",m:5,h:6,wa:160,lp:null},
+    {id:2,c:"RC-2604-01",e:"Recría",n:5,we:184,cc:3896200,fi:"2026-04-29",m:2,h:3,wa:190,lp:null},
+    {id:3,c:"RC-2602-02",e:"Recría",n:3,we:239.3,cc:2871200,fi:"2026-02-06",m:0,h:3,wa:239.3,lp:null},
+    {id:4,c:"RC-2603-01-RC",e:"Recría",n:1,we:206.7,cc:1033333,fi:"2026-03-18",m:0,h:1,wa:206.7,lp:null},
+    {id:5,c:"RC-2602-01",e:"Recría",n:1,we:200,cc:700000,fi:"2026-02-06",m:0,h:1,wa:200,lp:null},
+    {id:6,c:"RC-2601-02",e:"Recría",n:1,we:140,cc:490000,fi:"2026-01-16",m:1,h:0,wa:140,lp:null},
+    {id:7,c:"RC-2601-01",e:"Recría",n:1,we:140,cc:500000,fi:"2026-01-30",m:1,h:0,wa:140,lp:null},
+    {id:8,c:"FT-ACTUAL-01",e:"Feedlot",n:8,we:215.8,cc:7769700,fi:"2026-03-20",m:2,h:6,wa:215.8,lp:null},
+    {id:9,c:"RC-2603-01",e:"Feedlot",n:2,we:206.7,cc:2066667,fi:"2026-03-18",m:0,h:2,wa:206.7,lp:null}
+  ],
+  kpi:{v:50960500,g:11983777,ks:7080},
+  sal:[{n:"Paco",a:14200000,r:0,col:"#64b5f6"},{n:"Hernán",a:15800000,r:0,col:"#81c784"}]
+};
 
 let cur="dashboard",ed="feedlot",tr="pesada",fd={},ok=false;
 const $=id=>document.getElementById(id);
@@ -107,6 +119,36 @@ const fmt=n=>n?"$"+Math.round(n).toLocaleString("es-AR"):"—";
 const fmtM=n=>n?"$"+(n/1e6).toFixed(2)+"M":"—";
 const fmtKg=n=>n?Math.round(n).toLocaleString("es-AR")+" kg":"—";
 const dias=f=>f?Math.floor((Date.now()-new Date(f))/864e5):null;
+
+// ─── Sincronización con Google Sheets ────────────────────────
+function showSync(msg) {
+  $('syncBar').classList.remove('hidden');
+  $('syncMsg').textContent = msg;
+}
+function hideSync() {
+  $('syncBar').classList.add('hidden');
+}
+
+async function loadData() {
+  showSync('Sincronizando con Sheets...');
+  try {
+    const resp = await fetch(WEB_APP_URL + '?action=getData');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (data.lotes && data.lotes.length > 0) D.lotes = data.lotes;
+    if (data.kpi) D.kpi = data.kpi;
+    if (data.sal && data.sal.length > 0) D.sal = data.sal;
+    if (data.cfg) D.cfg = data.cfg;
+    if (data.u) D.u = data.u;
+    showSync('✓ Datos actualizados');
+    render();
+    setTimeout(hideSync, 1500);
+  } catch (err) {
+    console.warn('Sin conexión a Sheets, usando datos locales:', err.message);
+    showSync('⚠ Sin conexión — datos locales');
+    setTimeout(hideSync, 2500);
+  }
+}
 
 function sDB(){
   const rc=D.lotes.filter(l=>l.e==="Recría"),ft=D.lotes.filter(l=>l.e==="Feedlot");
@@ -124,7 +166,7 @@ function sDB(){
 </div>
 <div class="stitle">⚠ Alertas</div>
 ${al.length?al.map(l=>`<div class="alert aw"><div class="alert-icon">⚠️</div><div><div class="alert-title">${l.c} — sin pesada</div><div class="alert-sub">${l.n} animales · ${l.e}</div></div></div>`).join(''):`<div class="alert aok"><div class="alert-icon">✅</div><div><div class="alert-title">Sin alertas</div><div class="alert-sub">Todo al día</div></div></div>`}
-${ftl.length?`<div class="stitle">🎯 Próximos a vender</div>${ftl.map(l=>`<div class="alert ai"><div class="alert-icon">📦</div><div><div class="alert-title">${l.c} — ${l.wa}kg prom</div><div class="alert-sub">${l.n} animales · ${dias(l.fi)} días en sistema</div></div></div>`).join('')}`:''}
+${ftl.length?`<div class="stitle">🎯 Próximos a vender</div>${ftl.map(l=>`<div class="alert ai"><div class="alert-icon">📦</div><div><div class="alert-title">${l.c} — ${l.wa}kg prom</div><div class="alert-sub">${l.n} animales · ${dias(l.fi)} días en sistema</div></div></div>`).join('')}`:''}  
 <div style="padding:8px 0"></div>`;
 }
 
@@ -165,16 +207,18 @@ ${f}
 
 function sKPIs(){
   const mar=D.kpi.v-D.kpi.g,rent=((mar/D.kpi.g)*100).toFixed(1);
+  const aR=D.lotes.filter(l=>l.e==="Recría").reduce((s,l)=>s+l.n,0);
+  const aF=D.lotes.filter(l=>l.e==="Feedlot").reduce((s,l)=>s+l.n,0);
   return`<div class="header"><div><div class="header-sub">Indicadores</div><div class="header-title">KPIs</div></div><div class="logo-mark">📊</div></div>
 <div class="stitle">Productivo</div>
 <div class="kb">
-<div class="kr"><span class="kk">Animales activos</span><span class="kv">33 (23 RC · 10 FT)</span></div>
+<div class="kr"><span class="kk">Animales activos</span><span class="kv">${aR+aF} (${aR} RC · ${aF} FT)</span></div>
 <div class="kr"><span class="kk">Stock vivo estimado</span><span class="kv">${fmtKg(D.kpi.ks)}</span></div>
 <div class="kr"><span class="kk">ADPV recría</span><span class="kv warn">Pendiente 1ª pesada</span></div>
-<div class="kr"><span class="kk">ADPV feedlot (hist.)</span><span class="kv good">1,1 kg/día</span></div>
+<div class="kr"><span class="kk">ADPV feedlot (hist.)</span><span class="kv good">${D.cfg.adft} kg/día</span></div>
 <div class="kr"><span class="kk">Costo/kg feedlot</span><span class="kv good">${fmt(D.cfg.ckft)}/kg</span></div>
 <div class="kr"><span class="kk">Costo/kg recría</span><span class="kv warn">${fmt(D.cfg.ckrc)}/kg ~est.</span></div>
-<div class="kr"><span class="kk">Próxima pesada</span><span class="kv warn">07/06/2026</span></div>
+<div class="kr"><span class="kk">Precio mercado ref.</span><span class="kv">${fmt(D.cfg.pm)}/kg</span></div>
 </div>
 <div class="stitle">Económico</div>
 <div class="kb">
@@ -182,12 +226,10 @@ function sKPIs(){
 <div class="kr"><span class="kk">Gastos operativos</span><span class="kv">${fmtM(D.kpi.g)}</span></div>
 <div class="kr"><span class="kk">Margen bruto</span><span class="kv good">${fmtM(mar)}</span></div>
 <div class="kr"><span class="kk">Rentabilidad</span><span class="kv good">${rent}%</span></div>
-<div class="kr"><span class="kk">Capital activo</span><span class="kv">${fmtM(29919500)}</span></div>
-<div class="kr"><span class="kk">Precio mercado ref.</span><span class="kv">${fmt(D.cfg.pm)}/kg</span></div>
 </div>
 <div class="stitle">Inversores</div>
 ${D.sal.map(s=>`<div class="sc"><div class="sn" style="color:${s.col}">${s.n}</div><div class="sr2"><div class="si"><div class="sil">Aportó</div><div class="siv">${fmtM(s.a)}</div></div><div class="si"><div class="sil">Retiró</div><div class="siv">${fmtM(s.r)}</div></div></div></div>`).join('')}
-<div class="alert ai" style="margin-top:4px"><div class="alert-icon">ℹ️</div><div><div class="alert-title">Diferencia: $1.6M</div><div class="alert-sub">Hernán aportó más. Ajustar en próxima distribución.</div></div></div>
+${D.sal.length>=2?`<div class="alert ai" style="margin-top:4px"><div class="alert-icon">ℹ️</div><div><div class="alert-title">Diferencia: ${fmtM(Math.abs(D.sal[1].a-D.sal[0].a))}</div><div class="alert-sub">${D.sal[0].a>D.sal[1].a?D.sal[0].n:D.sal[1].n} aportó más. Ajustar en próxima distribución.</div></div></div>`:''}
 <div style="padding:4px 0"></div>`;
 }
 
@@ -324,6 +366,7 @@ function vL(id){
 <div class="kr"><span class="kk">Costo compra total</span><span class="kv">${fmt(l.cc)}</span></div>
 <div class="kr"><span class="kk">Costo/animal</span><span class="kv">${fmt(l.cc/l.n)}</span></div>
 <div class="kr"><span class="kk">Fecha ingreso</span><span class="kv">${new Date(l.fi).toLocaleDateString('es-AR')}</span></div>
+${l.lp?`<div class="kr"><span class="kk">Última pesada</span><span class="kv good">${new Date(l.lp).toLocaleDateString('es-AR')}</span></div>`:`<div class="kr"><span class="kk">Última pesada</span><span class="kv warn">Sin pesada registrada</span></div>`}
 </div>
 <div style="padding:8px 0"></div>`;
 }
@@ -335,7 +378,9 @@ function render(){
   $('sc').innerHTML=(sc[cur]||sDB)();
   $('nav').innerHTML=NAV.map(n=>`<button class="nav-btn ${cur===n.id?'active':''}" onclick="nav('${n.id}')"><span class="nav-icon">${n.icon}</span><span class="nav-label">${n.l}</span></button>`).join('');
 }
-render();
+
+render();     // Renderiza inmediatamente con datos locales
+loadData();   // Carga datos frescos de Sheets en paralelo
 </script>
 </body>
 </html>
