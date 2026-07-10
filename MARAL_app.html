@@ -412,7 +412,7 @@ function eval2(){
   const cc=res.rent>=15?'eg':res.rent>=5?'ea':'erd';
   const tc=res.rent>=15?'#66bb6a':res.rent>=5?'#ffb74d':'#ef5350';
   const em=res.rent>=15?'✓':res.rent>=5?'⚠':'✗';
-  const vd=res.rent>=15?'Buen negocio':'Margen justo — negociá':'No conviene';
+  const vd=res.rent>=15?'Buen negocio — conviene comprar':res.rent>=5?'Margen justo — negociá precio':'No conviene — da pérdida';
   const det=rr=>`<div class="kb" style="margin-top:12px">${[['Kg a ganar/animal',fmtKg(rr.kgG)],['Días estimados',rr.ds+' días'],['Costo producción',fmt(rr.cp)],['Costo total',fmt(rr.ct)],['Ingreso estimado',fmt(rr.ing)],['Margen total',fmt(rr.mar)],['Margen/animal',fmt(rr.mar/c)],['Rentabilidad',rr.rent.toFixed(1)+'%']].map(([k,v])=>`<div class="kr"><span class="kk">${k}</span><span class="kv">${v}</span></div>`).join('')}</div>`;
   $('eres').innerHTML=`
 <div style="padding:16px 0 0"></div>
