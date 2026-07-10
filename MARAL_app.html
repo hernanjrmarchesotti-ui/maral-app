@@ -347,14 +347,36 @@ function sD(d){ed=d;render()}
 
 async function guar(){
   if(btnLoading)return;
-  const lote=$('fl')?.value||'', fecha=$('ff')?.value||hoy();
-  btnLoading=true; render();
-  let hoja='',fila=[];
+  // Leer TODOS los valores del formulario ANTES de cualquier render
+  const lote=$('fl')?.value||'';
+  const fecha=$('ff')?.value||hoy();
+  const peso=parseFloat($('fp')?.value)||0;
+  const cant=parseInt($('fc')?.value)||0;
+  const est=$('fe')?.value||'si';
+  const obs=$('fo')?.value||'';
+  const kg=parseFloat($('fkg')?.value)||0;
+  const so=parseFloat($('fso')?.value)||0;
+  const ta=$('fta')?.value||'Balanceado granel';
+  const orig=$('for2')?.value||'';
+  const pt=parseFloat($('fpt')?.value)||0;
+  const desc=$('fde')?.value||'';
+  const monto=parseFloat($('fmo')?.value)||0;
+  const inv=$('fin')?.value||'Ambos';
+  const tg=$('ftg')?.value||'Otro';
+  const tm=$('ftm')?.value||'Cambio parcela';
+  const desde=$('fde2')?.value||'';
+  const hacia=$('fha')?.value||'';
+  const obm=$('fobm')?.value||'';
+  const kgv=parseFloat($('fkv')?.value)||0;
+  const pv=parseFloat($('fpv')?.value)||0;
+  const dv=parseFloat($('fdv')?.value)||8;
+  const cv=parseInt($('fcv')?.value)||0;
+  const co=$('fco')?.value||'';
+
+  let hoja='', fila=[];
 
   if(tr==="pesada"){
-    const peso=parseFloat($('fp')?.value)||0, cant=parseInt($('fc')?.value)||0;
-    const est=$('fe')?.value||'si', obs=$('fo')?.value||'';
-    if(!peso||!cant){btnLoading=false;render();return;}
+    if(!peso||!cant) return;
     hoja='04_PESADAS';
     fila=[fecha,lote,cant,peso,cant*peso,'','','',(est==='si'?'Estimado':'Real'),'Hernán','Pendiente',obs];
     const l=D.lotes.find(x=>x.c===lote);
@@ -362,30 +384,24 @@ async function guar(){
     D.pesadas.push({fecha,lote,cant,peso,obs});
   }
   if(tr==="alimento"){
-    const kg=parseFloat($('fkg')?.value)||0, pt=parseFloat($('fpt')?.value)||0;
-    const ta=$('fta')?.value||'Balanceado granel', orig=$('for2')?.value||'';
     hoja='07_ALIMENTOS';
     fila=[fecha,ta,'Compra',kg,pt,kg>0?(pt/kg).toFixed(0):0,'Feedlot',lote,'',orig,'Hernán','Pendiente',''];
   }
   if(tr==="gasto"){
-    const desc=$('fde')?.value||'', monto=parseFloat($('fmo')?.value)||0;
-    const inv=$('fin')?.value||'Ambos', tg=$('ftg')?.value||'Otro';
     hoja='09_GASTOS';
     fila=[fecha,tg,desc,monto,'General',lote,'',inv,'Hernán','Pendiente',''];
   }
   if(tr==="movimiento"){
-    const tm=$('ftm')?.value||'', desde=$('fde2')?.value||'', hacia=$('fha')?.value||'', obm=$('fobm')?.value||'';
     hoja='03_MOVIMIENTOS';
     fila=[fecha,'',tm,lote,desde,hacia,'','','Hernán','Hernán','Pendiente',obm];
   }
   if(tr==="venta"){
-    const kgv=parseFloat($('fkv')?.value)||0, pv=parseFloat($('fpv')?.value)||0;
-    const dv=parseFloat($('fdv')?.value)||8, cv=parseInt($('fcv')?.value)||0, co=$('fco')?.value||'';
     const kgN=kgv*(1-dv/100);
     hoja='10_VENTAS';
-    fila=[fecha,lote,cv,kgv,dv/100,kgN.toFixed(1),pv,(kgN*pv).toFixed(0),'',( kgN*pv).toFixed(0),co,'Hernán','Pendiente',''];
+    fila=[fecha,lote,cv,kgv,dv/100,kgN.toFixed(1),pv,(kgN*pv).toFixed(0),'',(kgN*pv).toFixed(0),co,'Hernán','Pendiente',''];
   }
 
+  btnLoading=true; render();
   if(hoja&&fila.length>0) await escribirSheet(hoja,fila);
   btnLoading=false; btnOK=true; render();
   setTimeout(()=>{btnOK=false;render();},3000);
