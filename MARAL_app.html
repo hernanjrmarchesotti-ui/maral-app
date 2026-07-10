@@ -78,14 +78,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .si{background:var(--bg2);border-radius:10px;padding:10px 12px}
 .sil{font-size:10px;color:var(--text3);margin-bottom:3px}
 .siv{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
-.sync-bar{background:#0a1a0a;border-bottom:1px solid var(--border);padding:6px 18px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3)}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+.pesada-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin:0 18px 6px;display:flex;justify-content:space-between;align-items:center}
+.syncbar{background:#0a1a0a;border-bottom:1px solid var(--border);padding:6px 18px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-on{background:var(--accent);animation:pulse 2s infinite}
+.dot-off{background:#5a3a00}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.sync-dot.off{background:#5a3a00;animation:none}
-.pesadas-list{margin:0 18px 12px}
-.pesada-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
-.pesada-left{font-size:13px;color:var(--text)}
-.pesada-right{font-size:12px;color:var(--text3);text-align:right}
 @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .screen>*{animation:fu .2s ease both}
 </style>
@@ -97,43 +95,35 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 </div>
 <script>
 // ============================================================
-// CONFIGURACIÓN — Apps Script URL
+// CONFIG
 // ============================================================
+const SHEET_ID = '1D7Zt7SKg3Lrc9jZo_tr8Pp_GFyVNohwVDv0fmYAUZbE';
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyrIpDgollfIO73I_l7k4qrBSU7C9Oj0fqAGfX1PYrpwECmKMUKyaBBMD6cSkvtp_99/exec';
+const sheetURL = hoja => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(hoja)}`;
 
 // ============================================================
-// ESTADO GLOBAL
+// ESTADO
 // ============================================================
-let cur = "dashboard";
-let ed = "feedlot";
-let tr = "pesada";
-let fd = {};
-let btnOK = false;
-let btnLoading = false;
-let sheetConectado = false;
-let ultimaSync = null;
+let cur = "dashboard", ed = "feedlot", tr = "pesada", fd = {}, btnOK = false, btnLoading = false;
+let conectado = false, ultimaSync = null;
 
-// Datos base (se actualizan desde el Sheet)
 let D = {
   u: "Hernán",
   cfg: { pm: 5000, obj: 340, adft: 1.1, adrc: 0.7, ckft: 2720, ckrc: 1750, da: 20 },
   lotes: [
-    {id:1,c:"RC-2605-01",e:"Recría",n:11,we:160.5,cc:10592400,fi:"2026-05-11",m:5,h:6,wa:160,lp:null},
-    {id:2,c:"RC-2604-01",e:"Recría",n:5,we:184,cc:3896200,fi:"2026-04-29",m:2,h:3,wa:190,lp:null},
-    {id:3,c:"RC-2602-02",e:"Recría",n:3,we:239.3,cc:2871200,fi:"2026-02-06",m:0,h:3,wa:210,lp:null},
-    {id:4,c:"RC-2603-01-RC",e:"Recría",n:1,we:206.7,cc:1033333,fi:"2026-03-18",m:0,h:1,wa:210,lp:null},
-    {id:5,c:"RC-2602-01",e:"Recría",n:1,we:200,cc:700000,fi:"2026-02-06",m:0,h:1,wa:210,lp:null},
-    {id:6,c:"RC-2601-02",e:"Recría",n:1,we:140,cc:490000,fi:"2026-01-16",m:1,h:0,wa:160,lp:null},
-    {id:7,c:"RC-2601-01",e:"Recría",n:1,we:140,cc:500000,fi:"2026-01-30",m:1,h:0,wa:160,lp:null},
-    {id:8,c:"FT-ACTUAL-01",e:"Feedlot",n:8,we:215.8,cc:7769700,fi:"2026-03-20",m:2,h:6,wa:300,lp:null},
-    {id:9,c:"RC-2603-01",e:"Feedlot",n:2,we:206.7,cc:2066667,fi:"2026-03-18",m:0,h:2,wa:300,lp:null}
+    {id:1,c:"RC-2605-01",e:"Recría",n:11,we:160.5,cc:10592400,fi:"2026-05-11",wa:160,lp:null},
+    {id:2,c:"RC-2604-01",e:"Recría",n:5,we:184,cc:3896200,fi:"2026-04-29",wa:190,lp:null},
+    {id:3,c:"RC-2602-02",e:"Recría",n:3,we:239.3,cc:2871200,fi:"2026-02-06",wa:210,lp:null},
+    {id:4,c:"RC-2603-01-RC",e:"Recría",n:1,we:206.7,cc:1033333,fi:"2026-03-18",wa:210,lp:null},
+    {id:5,c:"RC-2602-01",e:"Recría",n:1,we:200,cc:700000,fi:"2026-02-06",wa:210,lp:null},
+    {id:6,c:"RC-2601-02",e:"Recría",n:1,we:140,cc:490000,fi:"2026-01-16",wa:160,lp:null},
+    {id:7,c:"RC-2601-01",e:"Recría",n:1,we:140,cc:500000,fi:"2026-01-30",wa:160,lp:null},
+    {id:8,c:"FT-ACTUAL-01",e:"Feedlot",n:8,we:215.8,cc:7769700,fi:"2026-03-20",wa:300,lp:null},
+    {id:9,c:"RC-2603-01",e:"Feedlot",n:2,we:206.7,cc:2066667,fi:"2026-03-18",wa:300,lp:null}
   ],
   pesadas: [],
   kpi: { v: 50960500, g: 11983777, ks: 7080 },
-  sal: [
-    { n: "Paco", a: 14200000, r: 0, col: "#64b5f6" },
-    { n: "Hernán", a: 15800000, r: 0, col: "#81c784" }
-  ]
+  sal: [{n:"Paco",a:14200000,r:0,col:"#64b5f6"},{n:"Hernán",a:15800000,r:0,col:"#81c784"}]
 };
 
 // ============================================================
@@ -141,86 +131,87 @@ let D = {
 // ============================================================
 const $ = id => document.getElementById(id);
 const fmt = n => n ? "$" + Math.round(n).toLocaleString("es-AR") : "—";
-const fmtM = n => n ? "$" + (n / 1e6).toFixed(2) + "M" : "—";
+const fmtM = n => n ? "$" + (n/1e6).toFixed(2) + "M" : "—";
 const fmtKg = n => n ? Math.round(n).toLocaleString("es-AR") + " kg" : "—";
 const dias = f => f ? Math.floor((Date.now() - new Date(f)) / 864e5) : null;
 const hoy = () => new Date().toISOString().split('T')[0];
 
+// Parsear CSV de Google Sheets gviz
+function parseGviz(text) {
+  try {
+    const json = text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, '');
+    const data = JSON.parse(json);
+    if (!data.table || !data.table.rows) return [];
+    const cols = data.table.cols.map(c => c.label);
+    return data.table.rows.map(row => {
+      const obj = {};
+      row.c.forEach((cell, i) => {
+        obj[cols[i]] = cell ? cell.v : null;
+      });
+      return obj;
+    });
+  } catch(e) { return []; }
+}
+
 // ============================================================
-// SINCRONIZACIÓN CON GOOGLE SHEETS
+// SYNC CON SHEET
 // ============================================================
-async function sincronizarDesdeSheet() {
+async function sync() {
   try {
     // Leer pesadas
-    const res = await fetch(SCRIPT_URL + '?hoja=04_PESADAS', { redirect: 'follow' });
-    const data = await res.json();
-    if (data.ok && data.datos && data.datos.length > 1) {
-      const rows = data.datos.slice(1); // skip header
-      D.pesadas = rows
-        .filter(r => r[0] && r[1])
-        .map(r => ({
-          fecha: r[0] instanceof Date ? r[0].toISOString().split('T')[0] : String(r[0]).split('T')[0],
-          lote: String(r[1]),
-          cant: Number(r[2]) || 0,
-          peso: Number(r[3]) || 0,
-          estimado: String(r[8] || '').toLowerCase().includes('stim'),
-          obs: String(r[10] || '')
-        }));
-
-      // Actualizar peso actual de lotes con última pesada
+    const r1 = await fetch(sheetURL('04_PESADAS'));
+    const t1 = await r1.text();
+    const pesadas = parseGviz(t1);
+    if (pesadas.length > 0) {
+      D.pesadas = pesadas.filter(p => p['Fecha'] && p['ID Lote']).map(p => ({
+        fecha: p['Fecha'] ? (typeof p['Fecha'] === 'string' ? p['Fecha'].split('T')[0] : new Date(p['Fecha']).toISOString().split('T')[0]) : '',
+        lote: String(p['ID Lote'] || ''),
+        cant: Number(p['Cantidad'] || 0),
+        peso: Number(p['Peso prom'] || 0),
+        obs: String(p['Observaciones'] || '')
+      }));
+      // Actualizar peso actual de cada lote
       D.lotes.forEach(l => {
-        const pesadasLote = D.pesadas.filter(p => p.lote === l.c).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-        if (pesadasLote.length > 0) {
-          l.wa = pesadasLote[0].peso;
-          l.lp = pesadasLote[0].fecha;
-        }
+        const ps = D.pesadas.filter(p => p.lote === l.c).sort((a,b) => new Date(b.fecha)-new Date(a.fecha));
+        if (ps.length > 0) { l.wa = ps[0].peso; l.lp = ps[0].fecha; }
       });
-
-      sheetConectado = true;
-      ultimaSync = new Date();
     }
 
     // Leer lotes activos
-    const resLotes = await fetch(SCRIPT_URL + '?hoja=02_LOTES', { redirect: 'follow' });
-    const dataLotes = await resLotes.json();
-    if (dataLotes.ok && dataLotes.datos && dataLotes.datos.length > 1) {
-      const rows = dataLotes.datos.slice(1);
-      const lotesActivos = rows.filter(r => r[0] && r[4] === 'Activo');
-      if (lotesActivos.length > 0) {
-        D.lotes = lotesActivos.map((r, i) => ({
-          id: i + 1,
-          c: String(r[0]),
-          e: String(r[3] || 'Recría'),
-          n: Number(r[6]) || 0,
-          we: Number(r[8]) || 0,
-          cc: Number(r[10]) || 0,
-          fi: r[2] instanceof Date ? r[2].toISOString().split('T')[0] : String(r[2] || '').split('T')[0],
-          m: 0, h: Number(r[6]) || 0,
-          wa: Number(r[8]) || 0,
-          lp: null
-        }));
-        // Re-aplicar pesadas a lotes actualizados
-        D.lotes.forEach(l => {
-          const pesadasLote = D.pesadas.filter(p => p.lote === l.c).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-          if (pesadasLote.length > 0) {
-            l.wa = pesadasLote[0].peso;
-            l.lp = pesadasLote[0].fecha;
-          }
-        });
-      }
-      sheetConectado = true;
-      ultimaSync = new Date();
+    const r2 = await fetch(sheetURL('02_LOTES'));
+    const t2 = await r2.text();
+    const lotes = parseGviz(t2);
+    const activos = lotes.filter(l => l['Estado lote'] === 'Activo' && l['ID Lote']);
+    if (activos.length > 0) {
+      D.lotes = activos.map((l, i) => ({
+        id: i + 1,
+        c: String(l['ID Lote']),
+        e: String(l['Etapa'] || 'Recría'),
+        n: Number(l['Cantidad'] || 0),
+        we: Number(l['Peso prom entrada'] || 0),
+        cc: Number(l['Costo compra'] || 0),
+        fi: l['Fecha ingreso'] ? (typeof l['Fecha ingreso'] === 'string' ? l['Fecha ingreso'].split('T')[0] : new Date(l['Fecha ingreso']).toISOString().split('T')[0]) : '',
+        wa: Number(l['Peso prom entrada'] || 0),
+        lp: null
+      }));
+      // Re-aplicar pesadas
+      D.lotes.forEach(l => {
+        const ps = D.pesadas.filter(p => p.lote === l.c).sort((a,b) => new Date(b.fecha)-new Date(a.fecha));
+        if (ps.length > 0) { l.wa = ps[0].peso; l.lp = ps[0].fecha; }
+      });
     }
 
+    conectado = true;
+    ultimaSync = new Date();
     render();
-  } catch (err) {
-    console.log('Sin conexión al Sheet, usando datos locales', err);
-    sheetConectado = false;
+  } catch(err) {
+    console.log('Sin conexión:', err);
+    conectado = false;
     render();
   }
 }
 
-async function guardarEnSheet(hoja, fila) {
+async function escribirSheet(hoja, fila) {
   try {
     await fetch(SCRIPT_URL, {
       method: 'POST',
@@ -229,141 +220,97 @@ async function guardarEnSheet(hoja, fila) {
       body: JSON.stringify({ hoja, accion: 'agregar', fila })
     });
     return true;
-  } catch (err) {
-    console.log('Error al guardar en Sheet', err);
-    return false;
-  }
+  } catch(e) { return false; }
 }
 
 // ============================================================
 // SCREENS
 // ============================================================
-function sDB() {
-  const rc = D.lotes.filter(l => l.e === "Recría");
-  const ft = D.lotes.filter(l => l.e === "Feedlot");
-  const aR = rc.reduce((s, l) => s + l.n, 0);
-  const aF = ft.reduce((s, l) => s + l.n, 0);
-  const mar = D.kpi.v - D.kpi.g;
-  const al = D.lotes.filter(l => !l.lp || dias(l.lp) > D.cfg.da);
-  const ftl = ft.filter(l => l.wa >= D.cfg.obj - 20);
-  const syncStr = ultimaSync ? ultimaSync.toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'}) : 'nunca';
+function syncBar() {
+  const t = ultimaSync ? ultimaSync.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) : '';
+  return `<div class="syncbar">
+<div class="dot ${conectado?'dot-on':'dot-off'}"></div>
+<span>${conectado ? 'Sheet conectado · sync '+t : 'Sin conexión — datos base'}</span>
+<button onclick="sync()" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--text3);padding:2px 10px;border-radius:10px;font-size:10px;cursor:pointer">↻</button>
+</div>`;
+}
 
-  return `
-<div style="background:#0a1a0a;border-bottom:1px solid var(--border);padding:6px 18px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3)">
-  <div style="width:6px;height:6px;border-radius:50%;background:${sheetConectado ? 'var(--accent)' : '#5a3a00'};${sheetConectado ? 'animation:pulse 2s infinite' : ''}"></div>
-  ${sheetConectado ? `Conectado al Sheet · sync ${syncStr}` : 'Sin conexión — datos locales'}
-  <button onclick="sincronizarDesdeSheet()" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--text3);padding:2px 10px;border-radius:10px;font-size:10px;cursor:pointer">↻ Sync</button>
-</div>
+function sDB() {
+  const rc=D.lotes.filter(l=>l.e==="Recría"), ft=D.lotes.filter(l=>l.e==="Feedlot");
+  const aR=rc.reduce((s,l)=>s+l.n,0), aF=ft.reduce((s,l)=>s+l.n,0);
+  const mar=D.kpi.v-D.kpi.g;
+  const al=D.lotes.filter(l=>!l.lp||dias(l.lp)>D.cfg.da);
+  const ftl=ft.filter(l=>l.wa>=D.cfg.obj-20);
+  return syncBar()+`
 <div class="header"><div><div class="header-sub">Buenos días,</div><div class="header-title">${D.u}</div></div><div class="logo-mark">🐄</div></div>
-<div style="padding:4px 18px 0;font-size:11px;color:var(--text3)">${new Date().toLocaleDateString('es-AR', {weekday:'long',day:'numeric',month:'long'})}</div>
+<div style="padding:4px 18px 0;font-size:11px;color:var(--text3)">${new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</div>
 <div class="metrics">
 <div class="metric"><div class="metric-icon">🌾</div><div class="metric-val">${aR}</div><div class="metric-label">Recría</div><div class="metric-sub">${rc.length} lotes</div></div>
 <div class="metric"><div class="metric-icon">🏗</div><div class="metric-val">${aF}</div><div class="metric-label">Feedlot</div><div class="metric-sub">${ft.length} lotes</div></div>
 <div class="metric"><div class="metric-icon">💰</div><div class="metric-val" style="font-size:20px">${fmtM(mar)}</div><div class="metric-label">Margen neto</div><div class="metric-sub">acumulado</div></div>
 <div class="metric"><div class="metric-icon">⚖️</div><div class="metric-val" style="font-size:20px">${fmtKg(D.kpi.ks)}</div><div class="metric-label">Stock vivo</div><div class="metric-sub">estimado</div></div>
 </div>
-<div class="stitle">⚠ Alertas pesada</div>
-${al.length ? al.map(l => `<div class="alert aw"><div class="alert-icon">⚠️</div><div><div class="alert-title">${l.c} — ${l.lp ? dias(l.lp) + ' días sin pesar' : 'sin pesada'}</div><div class="alert-sub">${l.n} animales · ${l.e}</div></div></div>`).join('') : `<div class="alert aok"><div class="alert-icon">✅</div><div><div class="alert-title">Todas las pesadas al día</div></div></div>`}
-${ftl.length ? `<div class="stitle">🎯 Próximos a vender</div>${ftl.map(l => `<div class="alert ai"><div class="alert-icon">📦</div><div><div class="alert-title">${l.c} — ${l.wa}kg prom</div><div class="alert-sub">${l.n} animales · ${dias(l.fi)} días en sistema</div></div></div>`).join('')}` : ''}
+<div class="stitle">⚠ Alertas</div>
+${al.length?al.map(l=>`<div class="alert aw"><div class="alert-icon">⚠️</div><div><div class="alert-title">${l.c} — ${l.lp?dias(l.lp)+' días sin pesar':'sin pesada'}</div><div class="alert-sub">${l.n} animales · ${l.e}</div></div></div>`).join(''):`<div class="alert aok"><div class="alert-icon">✅</div><div><div class="alert-title">Pesadas al día</div></div></div>`}
+${ftl.length?`<div class="stitle">🎯 Próximos a vender</div>${ftl.map(l=>`<div class="alert ai"><div class="alert-icon">📦</div><div><div class="alert-title">${l.c} — ${l.wa}kg prom</div><div class="alert-sub">${l.n} animales · ${dias(l.fi)} días en sistema</div></div></div>`).join('')}`:''}
 <div style="padding:8px 0"></div>`;
 }
 
 function sLotes() {
-  const rc = D.lotes.filter(l => l.e === "Recría");
-  const ft = D.lotes.filter(l => l.e === "Feedlot");
-  const card = l => {
-    const d = dias(l.fi), p = Math.min((l.wa / D.cfg.obj) * 100, 100);
-    const bc = d < 30 ? "bg" : d < 90 ? "ba" : "bb";
-    return `<div class="lc" onclick="vL(${l.id})">
+  const rc=D.lotes.filter(l=>l.e==="Recría"), ft=D.lotes.filter(l=>l.e==="Feedlot");
+  const card=l=>{
+    const d=dias(l.fi), p=Math.min((l.wa/D.cfg.obj)*100,100);
+    const bc=d<30?"bg":d<90?"ba":"bb";
+    return`<div class="lc" onclick="vL(${l.id})">
 <div class="lh"><div class="lid">${l.c}</div><div class="badge ${bc}">${d} días</div></div>
-<div class="ls">
-<div><div class="lsl">Animales</div><div class="lsv">${l.n}</div></div>
-<div><div class="lsl">Peso actual</div><div class="lsv">${l.wa}kg</div></div>
-<div><div class="lsl">Costo</div><div class="lsv">${fmtM(l.cc)}</div></div>
-</div>
-<div style="margin-bottom:4px;display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--text3)">Prog. objetivo ${D.cfg.obj}kg</span><span style="font-size:10px;color:var(--text3)">${Math.round(p)}%</span></div>
-<div class="prog"><div class="pf" style="width:${p}%"></div></div>
-</div>`;
-  };
-  return `<div class="header"><div><div class="header-sub">Stock activo</div><div class="header-title">Lotes</div></div><div class="logo-mark">📋</div></div>
-<div class="ediv">🌾 Recría · ${rc.reduce((s, l) => s + l.n, 0)} animales</div>${rc.map(card).join('')}
-<div class="ediv">🏗 Feedlot · ${ft.reduce((s, l) => s + l.n, 0)} animales</div>${ft.map(card).join('')}
+<div class="ls"><div><div class="lsl">Animales</div><div class="lsv">${l.n}</div></div><div><div class="lsl">Peso actual</div><div class="lsv">${l.wa}kg</div></div><div><div class="lsl">Costo</div><div class="lsv">${fmtM(l.cc)}</div></div></div>
+<div style="margin-bottom:4px;display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--text3)">Prog. ${D.cfg.obj}kg</span><span style="font-size:10px;color:var(--text3)">${Math.round(p)}%</span></div>
+<div class="prog"><div class="pf" style="width:${p}%"></div></div></div>`;};
+  return`<div class="header"><div><div class="header-sub">Stock activo</div><div class="header-title">Lotes</div></div><div class="logo-mark">📋</div></div>
+<div class="ediv">🌾 Recría · ${rc.reduce((s,l)=>s+l.n,0)} animales</div>${rc.map(card).join('')}
+<div class="ediv">🏗 Feedlot · ${ft.reduce((s,l)=>s+l.n,0)} animales</div>${ft.map(card).join('')}
 <div style="padding:4px 0"></div>`;
 }
 
 function sCarga() {
-  const opts = D.lotes.map(l => `<option value="${l.c}">${l.c} (${l.n} an.)</option>`).join('');
-  const tipos = [{id:"pesada",l:"⚖️ Pesada"},{id:"alimento",l:"🌽 Alimento"},{id:"gasto",l:"💸 Gasto"},{id:"movimiento",l:"🔄 Movimiento"},{id:"venta",l:"💵 Venta"}];
-  let f = '';
-  if (tr === "pesada") f = `
-<div class="fr">
-<div class="fg"><label class="fl">Peso prom (kg)</label><input class="fi" type="number" placeholder="300" id="fp"></div>
-<div class="fg"><label class="fl">Cantidad</label><input class="fi" type="number" id="fc"></div>
-</div>
-<div class="fg" style="margin:0 18px 14px"><label class="fl">¿Estimado o real?</label>
-<select class="fi" id="fe"><option value="si">Estimado visual</option><option value="no">Pesada real con balanza</option></select></div>
+  const opts=D.lotes.map(l=>`<option value="${l.c}">${l.c} (${l.n} an.)</option>`).join('');
+  const tipos=[{id:"pesada",l:"⚖️ Pesada"},{id:"alimento",l:"🌽 Alimento"},{id:"gasto",l:"💸 Gasto"},{id:"movimiento",l:"🔄 Movimiento"},{id:"venta",l:"💵 Venta"}];
+  let f='';
+  if(tr==="pesada")f=`<div class="fr"><div class="fg"><label class="fl">Peso prom (kg)</label><input class="fi" type="number" placeholder="300" id="fp"></div><div class="fg"><label class="fl">Cantidad</label><input class="fi" type="number" id="fc"></div></div>
+<div class="fg" style="margin:0 18px 14px"><label class="fl">¿Estimado o real?</label><select class="fi" id="fe"><option value="si">Estimado visual</option><option value="no">Pesada real</option></select></div>
 <div class="fg" style="margin:0 18px 14px"><label class="fl">Observación</label><input class="fi" type="text" placeholder="Opcional" id="fo"></div>`;
-
-  if (tr === "alimento") f = `
-<div class="fg" style="margin:0 18px 14px"><label class="fl">Tipo alimento</label>
-<select class="fi" id="fta"><option>Balanceado granel</option><option>Maíz</option><option>Rollo</option><option>Fardo</option><option>Otro</option></select></div>
-<div class="fr">
-<div class="fg"><label class="fl">Kg cargados</label><input class="fi" type="number" placeholder="150" id="fkg"></div>
-<div class="fg"><label class="fl">Kg sobrante</label><input class="fi" type="number" placeholder="0" id="fso"></div>
-</div>
+  if(tr==="alimento")f=`<div class="fg" style="margin:0 18px 14px"><label class="fl">Tipo alimento</label><select class="fi" id="fta"><option>Balanceado granel</option><option>Maíz</option><option>Rollo</option><option>Fardo</option><option>Otro</option></select></div>
+<div class="fr"><div class="fg"><label class="fl">Kg cargados</label><input class="fi" type="number" placeholder="150" id="fkg"></div><div class="fg"><label class="fl">Kg sobrante</label><input class="fi" type="number" placeholder="0" id="fso"></div></div>
 <div class="fg" style="margin:0 18px 14px"><label class="fl">Proveedor</label><input class="fi" type="text" placeholder="Durán, Crincoli..." id="for2"></div>
 <div class="fg" style="margin:0 18px 14px"><label class="fl">Precio total ($)</label><input class="fi" type="number" id="fpt"></div>`;
-
-  if (tr === "gasto") f = `
-<div class="fg" style="margin:0 18px 14px"><label class="fl">Tipo</label>
-<select class="fi" id="ftg"><option>Alimento</option><option>Sanidad</option><option>Flete</option><option>Mano de obra</option><option>Infraestructura</option><option>Agricultura</option><option>Combustible</option><option>Otro</option></select></div>
+  if(tr==="gasto")f=`<div class="fg" style="margin:0 18px 14px"><label class="fl">Tipo</label><select class="fi" id="ftg"><option>Alimento</option><option>Sanidad</option><option>Flete</option><option>Mano de obra</option><option>Infraestructura</option><option>Agricultura</option><option>Combustible</option><option>Otro</option></select></div>
 <div class="fg" style="margin:0 18px 14px"><label class="fl">Descripción</label><input class="fi" type="text" id="fde"></div>
-<div class="fr">
-<div class="fg"><label class="fl">Monto ($)</label><input class="fi" type="number" id="fmo"></div>
-<div class="fg"><label class="fl">Pagado por</label><select class="fi" id="fin"><option>Paco</option><option>Hernán</option><option>Ambos</option></select></div>
-</div>`;
-
-  if (tr === "movimiento") f = `
-<div class="fg" style="margin:0 18px 14px"><label class="fl">Tipo</label>
-<select class="fi" id="ftm"><option>Cambio parcela</option><option>Pase a feedlot</option><option>Pase a recría</option><option>División de lote</option></select></div>
-<div class="fr">
-<div class="fg"><label class="fl">Desde</label><input class="fi" type="text" id="fde2"></div>
-<div class="fg"><label class="fl">Hacia</label><input class="fi" type="text" id="fha"></div>
-</div>
+<div class="fr"><div class="fg"><label class="fl">Monto ($)</label><input class="fi" type="number" id="fmo"></div><div class="fg"><label class="fl">Pagado por</label><select class="fi" id="fin"><option>Paco</option><option>Hernán</option><option>Ambos</option></select></div></div>`;
+  if(tr==="movimiento")f=`<div class="fg" style="margin:0 18px 14px"><label class="fl">Tipo</label><select class="fi" id="ftm"><option>Cambio parcela</option><option>Pase a feedlot</option><option>Pase a recría</option><option>División de lote</option></select></div>
+<div class="fr"><div class="fg"><label class="fl">Desde</label><input class="fi" type="text" id="fde2"></div><div class="fg"><label class="fl">Hacia</label><input class="fi" type="text" id="fha"></div></div>
 <div class="fg" style="margin:0 18px 14px"><label class="fl">Observación</label><input class="fi" type="text" id="fobm"></div>`;
-
-  if (tr === "venta") f = `
-<div class="fr">
-<div class="fg"><label class="fl">Kg brutos</label><input class="fi" type="number" placeholder="1500" id="fkv"></div>
-<div class="fg"><label class="fl">Precio/kg ($)</label><input class="fi" type="number" placeholder="5500" id="fpv"></div>
-</div>
-<div class="fr">
-<div class="fg"><label class="fl">Desbaste %</label><input class="fi" type="number" value="8" id="fdv"></div>
-<div class="fg"><label class="fl">Cantidad</label><input class="fi" type="number" id="fcv"></div>
-</div>
+  if(tr==="venta")f=`<div class="fr"><div class="fg"><label class="fl">Kg brutos</label><input class="fi" type="number" placeholder="1500" id="fkv"></div><div class="fg"><label class="fl">Precio/kg ($)</label><input class="fi" type="number" placeholder="5500" id="fpv"></div></div>
+<div class="fr"><div class="fg"><label class="fl">Desbaste %</label><input class="fi" type="number" value="8" id="fdv"></div><div class="fg"><label class="fl">Cantidad</label><input class="fi" type="number" id="fcv"></div></div>
 <div class="fg" style="margin:0 18px 14px"><label class="fl">Comprador</label><input class="fi" type="text" id="fco"></div>`;
-
-  return `<div class="header"><div><div class="header-sub">Registro diario</div><div class="header-title">Carga rápida</div></div><div class="logo-mark">➕</div></div>
-<div class="trow">${tipos.map(t => `<button class="tbtn ${tr === t.id ? 'act' : ''}" onclick="sT('${t.id}')">${t.l}</button>`).join('')}</div>
+  return`<div class="header"><div><div class="header-sub">Registro diario</div><div class="header-title">Carga rápida</div></div><div class="logo-mark">➕</div></div>
+<div class="trow">${tipos.map(t=>`<button class="tbtn ${tr===t.id?'act':''}" onclick="sT('${t.id}')">${t.l}</button>`).join('')}</div>
 <div class="fg" style="margin:0 18px 14px"><label class="fl">Lote</label><select class="fi" id="fl">${opts}</select></div>
 <div class="fg" style="margin:0 18px 14px"><label class="fl">Fecha</label><input class="fi" type="date" id="ff" value="${hoy()}"></div>
 ${f}
-<button class="btnp ${btnOK ? 'ok' : btnLoading ? 'loading' : ''}" onclick="guar()">
-${btnOK ? '✓ GUARDADO EN SHEET' : btnLoading ? '⏳ GUARDANDO...' : 'GUARDAR REGISTRO'}
+<button class="btnp ${btnOK?'ok':btnLoading?'loading':''}" onclick="guar()">
+${btnOK?'✓ GUARDADO EN SHEET':btnLoading?'⏳ GUARDANDO...':'GUARDAR REGISTRO'}
 </button>
 <div style="padding:8px 0"></div>`;
 }
 
 function sKPIs() {
-  const mar = D.kpi.v - D.kpi.g;
-  const rent = ((mar / D.kpi.g) * 100).toFixed(1);
-  const totalPesadas = D.pesadas.length;
-  return `<div class="header"><div><div class="header-sub">Indicadores</div><div class="header-title">KPIs</div></div><div class="logo-mark">📊</div></div>
+  const mar=D.kpi.v-D.kpi.g, rent=((mar/D.kpi.g)*100).toFixed(1);
+  return`<div class="header"><div><div class="header-sub">Indicadores</div><div class="header-title">KPIs</div></div><div class="logo-mark">📊</div></div>
 <div class="stitle">Productivo</div>
 <div class="kb">
 <div class="kr"><span class="kk">Animales activos</span><span class="kv">${D.lotes.reduce((s,l)=>s+l.n,0)} (${D.lotes.filter(l=>l.e==='Recría').reduce((s,l)=>s+l.n,0)} RC · ${D.lotes.filter(l=>l.e==='Feedlot').reduce((s,l)=>s+l.n,0)} FT)</span></div>
 <div class="kr"><span class="kk">Stock vivo estimado</span><span class="kv">${fmtKg(D.kpi.ks)}</span></div>
-<div class="kr"><span class="kk">Pesadas registradas</span><span class="kv ${totalPesadas>0?'good':'warn'}">${totalPesadas > 0 ? totalPesadas + ' pesadas' : 'Sin pesadas aún'}</span></div>
+<div class="kr"><span class="kk">Pesadas en Sheet</span><span class="kv ${D.pesadas.length>0?'good':'warn'}">${D.pesadas.length>0?D.pesadas.length+' registros':'Sin pesadas'}</span></div>
 <div class="kr"><span class="kk">ADPV feedlot (hist.)</span><span class="kv good">1,1 kg/día</span></div>
 <div class="kr"><span class="kk">Costo/kg feedlot</span><span class="kv good">${fmt(D.cfg.ckft)}/kg</span></div>
 <div class="kr"><span class="kk">Costo/kg recría</span><span class="kv warn">${fmt(D.cfg.ckrc)}/kg ~est.</span></div>
@@ -374,28 +321,19 @@ function sKPIs() {
 <div class="kr"><span class="kk">Gastos operativos</span><span class="kv">${fmtM(D.kpi.g)}</span></div>
 <div class="kr"><span class="kk">Margen bruto</span><span class="kv good">${fmtM(mar)}</span></div>
 <div class="kr"><span class="kk">Rentabilidad</span><span class="kv good">${rent}%</span></div>
-<div class="kr"><span class="kk">Precio mercado ref.</span><span class="kv">${fmt(D.cfg.pm)}/kg</span></div>
 </div>
-${totalPesadas > 0 ? `<div class="stitle">Últimas pesadas</div><div class="pesadas-list">
-${D.pesadas.slice(-5).reverse().map(p => `<div class="pesada-item"><div class="pesada-left">${p.lote}</div><div class="pesada-right">${p.peso}kg · ${p.cant} an.<br><span style="font-size:10px;color:var(--text3)">${p.fecha}</span></div></div>`).join('')}
-</div>` : ''}
+${D.pesadas.length>0?`<div class="stitle">Últimas pesadas del Sheet</div>${D.pesadas.slice(-5).reverse().map(p=>`<div class="pesada-item"><div style="font-size:13px">${p.lote} · ${p.peso}kg</div><div style="font-size:11px;color:var(--text3);text-align:right">${p.cant} an.<br>${p.fecha}</div></div>`).join('')}`:''}
 <div class="stitle">Inversores</div>
-${D.sal.map(s => `<div class="sc2"><div class="sn" style="color:${s.col}">${s.n}</div><div class="sr2"><div class="si"><div class="sil">Aportó</div><div class="siv">${fmtM(s.a)}</div></div><div class="si"><div class="sil">Retiró</div><div class="siv">${fmtM(s.r)}</div></div></div></div>`).join('')}
+${D.sal.map(s=>`<div class="sc2"><div class="sn" style="color:${s.col}">${s.n}</div><div class="sr2"><div class="si"><div class="sil">Aportó</div><div class="siv">${fmtM(s.a)}</div></div><div class="si"><div class="sil">Retiró</div><div class="siv">${fmtM(s.r)}</div></div></div></div>`).join('')}
 <div style="padding:4px 0"></div>`;
 }
 
 function sEval() {
-  const tipos = [{id:"recria",l:"🌾 Recría"},{id:"feedlot",l:"🏗 Feedlot"},{id:"ambos",l:"⚡ Comparar"}];
-  return `<div class="header"><div><div class="header-sub">En feria</div><div class="header-title">Evaluador</div></div><div class="logo-mark">🧮</div></div>
-<div class="dtog">${tipos.map(t => `<button class="dbtn ${ed === t.id ? 'act' : ''}" onclick="sD('${t.id}')">${t.l}</button>`).join('')}</div>
-<div class="fr">
-<div class="fg"><label class="fl">Cantidad</label><input class="fi" type="number" placeholder="10" id="ec" value="${fd.ec||''}"></div>
-<div class="fg"><label class="fl">Precio ofrecido ($/kg)</label><input class="fi" type="number" placeholder="5000" id="ep" value="${fd.ep||''}"></div>
-</div>
-<div class="fr">
-<div class="fg"><label class="fl">Peso entrada (kg)</label><input class="fi" type="number" placeholder="220" id="ew" value="${fd.ew||''}"></div>
-<div class="fg"><label class="fl">Peso objetivo venta (kg)</label><input class="fi" type="number" placeholder="330" id="epv" value="${fd.epv||''}"></div>
-</div>
+  const tipos=[{id:"recria",l:"🌾 Recría"},{id:"feedlot",l:"🏗 Feedlot"},{id:"ambos",l:"⚡ Comparar"}];
+  return`<div class="header"><div><div class="header-sub">En feria</div><div class="header-title">Evaluador</div></div><div class="logo-mark">🧮</div></div>
+<div class="dtog">${tipos.map(t=>`<button class="dbtn ${ed===t.id?'act':''}" onclick="sD('${t.id}')">${t.l}</button>`).join('')}</div>
+<div class="fr"><div class="fg"><label class="fl">Cantidad</label><input class="fi" type="number" placeholder="10" id="ec" value="${fd.ec||''}"></div><div class="fg"><label class="fl">Precio ofrecido ($/kg)</label><input class="fi" type="number" placeholder="5000" id="ep" value="${fd.ep||''}"></div></div>
+<div class="fr"><div class="fg"><label class="fl">Peso entrada (kg)</label><input class="fi" type="number" placeholder="220" id="ew" value="${fd.ew||''}"></div><div class="fg"><label class="fl">Peso objetivo venta (kg)</label><input class="fi" type="number" placeholder="330" id="epv" value="${fd.epv||''}"></div></div>
 <div class="fg" style="margin:0 18px 16px"><label class="fl">Precio venta estimado ($/kg)</label><input class="fi" type="number" placeholder="5500" id="epventa" value="${fd.epventa||''}"></div>
 <button class="btnp" onclick="eval2()">EVALUAR AHORA ↗</button>
 <div id="eres"></div><div style="padding:4px 0"></div>`;
@@ -404,92 +342,63 @@ function sEval() {
 // ============================================================
 // LOGIC
 // ============================================================
-function sT(t) { tr = t; btnOK = false; render(); }
-function sD(d) { ed = d; render(); }
+function sT(t){tr=t;btnOK=false;render()}
+function sD(d){ed=d;render()}
 
-async function guar() {
-  if (btnLoading) return;
-  const lote = $('fl')?.value || '';
-  const fecha = $('ff')?.value || hoy();
+async function guar(){
+  if(btnLoading)return;
+  const lote=$('fl')?.value||'', fecha=$('ff')?.value||hoy();
+  btnLoading=true; render();
+  let hoja='',fila=[];
 
-  btnLoading = true;
-  render();
-
-  let hoja = '';
-  let fila = [];
-
-  if (tr === "pesada") {
-    const peso = parseFloat($('fp')?.value) || 0;
-    const cant = parseInt($('fc')?.value) || 0;
-    const est = $('fe')?.value || 'si';
-    const obs = $('fo')?.value || '';
-    if (!peso || !cant) { btnLoading = false; render(); return; }
-    hoja = '04_PESADAS';
-    fila = [fecha, lote, cant, peso, cant * peso, '', '', '', est === 'si' ? 'Estimado' : 'Real', 'Hernán', 'Pendiente', obs];
-    // Actualizar dato local
-    const l = D.lotes.find(x => x.c === lote);
-    if (l) { l.wa = peso; l.lp = fecha; }
-    D.pesadas.push({ fecha, lote, cant, peso, estimado: est === 'si', obs });
+  if(tr==="pesada"){
+    const peso=parseFloat($('fp')?.value)||0, cant=parseInt($('fc')?.value)||0;
+    const est=$('fe')?.value||'si', obs=$('fo')?.value||'';
+    if(!peso||!cant){btnLoading=false;render();return;}
+    hoja='04_PESADAS';
+    fila=[fecha,lote,cant,peso,cant*peso,'','','',(est==='si'?'Estimado':'Real'),'Hernán','Pendiente',obs];
+    const l=D.lotes.find(x=>x.c===lote);
+    if(l){l.wa=peso;l.lp=fecha;}
+    D.pesadas.push({fecha,lote,cant,peso,obs});
+  }
+  if(tr==="alimento"){
+    const kg=parseFloat($('fkg')?.value)||0, pt=parseFloat($('fpt')?.value)||0;
+    const ta=$('fta')?.value||'Balanceado granel', orig=$('for2')?.value||'';
+    hoja='07_ALIMENTOS';
+    fila=[fecha,ta,'Compra',kg,pt,kg>0?(pt/kg).toFixed(0):0,'Feedlot',lote,'',orig,'Hernán','Pendiente',''];
+  }
+  if(tr==="gasto"){
+    const desc=$('fde')?.value||'', monto=parseFloat($('fmo')?.value)||0;
+    const inv=$('fin')?.value||'Ambos', tg=$('ftg')?.value||'Otro';
+    hoja='09_GASTOS';
+    fila=[fecha,tg,desc,monto,'General',lote,'',inv,'Hernán','Pendiente',''];
+  }
+  if(tr==="movimiento"){
+    const tm=$('ftm')?.value||'', desde=$('fde2')?.value||'', hacia=$('fha')?.value||'', obm=$('fobm')?.value||'';
+    hoja='03_MOVIMIENTOS';
+    fila=[fecha,'',tm,lote,desde,hacia,'','','Hernán','Hernán','Pendiente',obm];
+  }
+  if(tr==="venta"){
+    const kgv=parseFloat($('fkv')?.value)||0, pv=parseFloat($('fpv')?.value)||0;
+    const dv=parseFloat($('fdv')?.value)||8, cv=parseInt($('fcv')?.value)||0, co=$('fco')?.value||'';
+    const kgN=kgv*(1-dv/100);
+    hoja='10_VENTAS';
+    fila=[fecha,lote,cv,kgv,dv/100,kgN.toFixed(1),pv,(kgN*pv).toFixed(0),'',( kgN*pv).toFixed(0),co,'Hernán','Pendiente',''];
   }
 
-  if (tr === "alimento") {
-    const kg = parseFloat($('fkg')?.value) || 0;
-    const so = parseFloat($('fso')?.value) || 0;
-    const orig = $('for2')?.value || '';
-    const pt = parseFloat($('fpt')?.value) || 0;
-    const ta = $('fta')?.value || 'Balanceado granel';
-    hoja = '07_ALIMENTOS';
-    fila = [fecha, ta, 'Compra', kg, pt, kg > 0 ? (pt/kg).toFixed(0) : '', 'Feedlot', lote, '', orig, 'Hernán', 'Pendiente', ''];
-  }
-
-  if (tr === "gasto") {
-    const desc = $('fde')?.value || '';
-    const monto = parseFloat($('fmo')?.value) || 0;
-    const inv = $('fin')?.value || 'Ambos';
-    const tg = $('ftg')?.value || 'Otro';
-    hoja = '09_GASTOS';
-    fila = [fecha, tg, desc, monto, 'General', lote, '', inv, 'Hernán', 'Pendiente', ''];
-  }
-
-  if (tr === "movimiento") {
-    const tm = $('ftm')?.value || 'Cambio parcela';
-    const desde = $('fde2')?.value || '';
-    const hacia = $('fha')?.value || '';
-    const obm = $('fobm')?.value || '';
-    hoja = '03_MOVIMIENTOS';
-    fila = [fecha, '', tm, lote, desde, hacia, '', '', 'Hernán', 'Hernán', 'Pendiente', obm];
-  }
-
-  if (tr === "venta") {
-    const kgv = parseFloat($('fkv')?.value) || 0;
-    const pv = parseFloat($('fpv')?.value) || 0;
-    const dv = parseFloat($('fdv')?.value) || 8;
-    const cv = parseInt($('fcv')?.value) || 0;
-    const co = $('fco')?.value || '';
-    const kgNetos = kgv * (1 - dv / 100);
-    hoja = '10_VENTAS';
-    fila = [fecha, lote, cv, kgv, dv/100, kgNetos.toFixed(1), pv, (kgNetos*pv).toFixed(0), '', (kgNetos*pv).toFixed(0), co, 'Hernán', 'Pendiente', ''];
-  }
-
-  if (hoja && fila.length > 0) {
-    await guardarEnSheet(hoja, fila);
-  }
-
-  btnLoading = false;
-  btnOK = true;
-  render();
-  setTimeout(() => { btnOK = false; render(); }, 3000);
+  if(hoja&&fila.length>0) await escribirSheet(hoja,fila);
+  btnLoading=false; btnOK=true; render();
+  setTimeout(()=>{btnOK=false;render();},3000);
 }
 
-function eval2() {
-  const c = parseFloat($('ec')?.value)||0, p = parseFloat($('ep')?.value)||0,
-        w = parseFloat($('ew')?.value)||0, wv = parseFloat($('epv')?.value)||0,
-        pv = parseFloat($('epventa')?.value)||0;
-  fd = {ec:c,ep:p,ew:w,epv:wv,epventa:pv};
-  if (!c||!p||!w||!wv||!pv||wv<=w) return;
-
-  const calc = d => {
-    const ck = d==='recria'?D.cfg.ckrc:D.cfg.ckft, adpv = d==='recria'?D.cfg.adrc:D.cfg.adft;
+function eval2(){
+  const c=parseFloat($('ec')?.value)||0,p=parseFloat($('ep')?.value)||0,
+        w=parseFloat($('ew')?.value)||0,wv=parseFloat($('epv')?.value)||0,
+        pv=parseFloat($('epventa')?.value)||0;
+  fd={ec:c,ep:p,ew:w,epv:wv,epventa:pv};
+  if(!c||!p||!w||!wv||!pv||wv<=w)return;
+  const calc=d=>{
+    const ck=d==='recria'?D.cfg.ckrc:D.cfg.ckft,adpv=d==='recria'?D.cfg.adrc:D.cfg.adft;
     const dC=3,dV=8,com=3,san=1987,flt=2857;
     const kgNC=w*(1-dC/100),cc=kgNC*p*c,comM=cc*(com/100),ge=(san+flt)*c+comM;
     const kgG=wv-w,ds=Math.round(kgG/adpv),cp=kgG*ck*c;
@@ -497,39 +406,35 @@ function eval2() {
     const rent=(mar/ct)*100,pmax=(ing/1.10-(san+flt)*c-cp)/(kgNC*c*(1+com/100));
     return{cc,ge,kgG,ds,cp,kgNV,ing,ct,mar,rent,pmax};
   };
-
-  const r = ed==='ambos'?null:calc(ed);
-  const rR = ed==='ambos'?calc('recria'):null, rF = ed==='ambos'?calc('feedlot'):null;
-  const res = ed==='ambos'?(rR.rent>rF.rent?rR:rF):r;
-  const cc = res.rent>=15?'eg':res.rent>=5?'ea':'erd';
-  const tc = res.rent>=15?'#66bb6a':res.rent>=5?'#ffb74d':'#ef5350';
-  const em = res.rent>=15?'✓':res.rent>=5?'⚠':'✗';
-  const vd = res.rent>=15?'Buen negocio — conviene comprar':res.rent>=5?'Margen justo — negociá precio':'No conviene — da pérdida';
-  const det = rr => `<div class="kb" style="margin-top:12px">${[['Kg a ganar/animal',fmtKg(rr.kgG)],['Días estimados',rr.ds+' días'],['Costo producción',fmt(rr.cp)],['Costo total',fmt(rr.ct)],['Ingreso estimado',fmt(rr.ing)],['Margen total',fmt(rr.mar)],['Margen/animal',fmt(rr.mar/c)],['Rentabilidad',rr.rent.toFixed(1)+'%']].map(([k,v])=>`<div class="kr"><span class="kk">${k}</span><span class="kv">${v}</span></div>`).join('')}</div>`;
-
-  $('eres').innerHTML = `
+  const r=ed==='ambos'?null:calc(ed);
+  const rR=ed==='ambos'?calc('recria'):null,rF=ed==='ambos'?calc('feedlot'):null;
+  const res=ed==='ambos'?(rR.rent>rF.rent?rR:rF):r;
+  const cc=res.rent>=15?'eg':res.rent>=5?'ea':'erd';
+  const tc=res.rent>=15?'#66bb6a':res.rent>=5?'#ffb74d':'#ef5350';
+  const em=res.rent>=15?'✓':res.rent>=5?'⚠':'✗';
+  const vd=res.rent>=15?'Buen negocio':'Margen justo — negociá':'No conviene';
+  const det=rr=>`<div class="kb" style="margin-top:12px">${[['Kg a ganar/animal',fmtKg(rr.kgG)],['Días estimados',rr.ds+' días'],['Costo producción',fmt(rr.cp)],['Costo total',fmt(rr.ct)],['Ingreso estimado',fmt(rr.ing)],['Margen total',fmt(rr.mar)],['Margen/animal',fmt(rr.mar/c)],['Rentabilidad',rr.rent.toFixed(1)+'%']].map(([k,v])=>`<div class="kr"><span class="kk">${k}</span><span class="kv">${v}</span></div>`).join('')}</div>`;
+  $('eres').innerHTML=`
 <div style="padding:16px 0 0"></div>
 <div class="er ${cc}"><div class="ev" style="color:${tc}">${em} ${vd}</div><div class="es">Rent: ${res.rent.toFixed(1)}% · Margen/animal: ${fmt(res.mar/c)}</div></div>
 <div class="pm"><div><div class="pml">Precio máximo a pagar</div><div style="font-size:10px;color:var(--text3);margin-top:2px">para ganar al menos 10%</div></div><div class="pmv">${fmt(res.pmax)}/kg</div></div>
-${ed==='ambos'?`<div class="kb"><div class="kr"><span class="kk">🌾 Recría</span><span class="kv ${rR.rent>=15?'good':rR.rent>=5?'warn':'bad'}">${rR.rent.toFixed(1)}% · ${fmt(rR.mar/c)}/animal</span></div><div class="kr"><span class="kk">🏗 Feedlot</span><span class="kv ${rF.rent>=15?'good':rF.rent>=5?'warn':'bad'}">${rF.rent.toFixed(1)}% · ${fmt(rF.mar/c)}/animal</span></div><div class="kr"><span class="kk">Mejor opción</span><span class="kv good">${rR.rent>rF.rent?'🌾 Recría':'🏗 Feedlot'}</span></div></div>`:det(r)}`;
+${ed==='ambos'?`<div class="kb"><div class="kr"><span class="kk">🌾 Recría</span><span class="kv ${rR.rent>=15?'good':rR.rent>=5?'warn':'bad'}">${rR.rent.toFixed(1)}% · ${fmt(rR.mar/c)}/an.</span></div><div class="kr"><span class="kk">🏗 Feedlot</span><span class="kv ${rF.rent>=15?'good':rF.rent>=5?'warn':'bad'}">${rF.rent.toFixed(1)}% · ${fmt(rF.mar/c)}/an.</span></div><div class="kr"><span class="kk">Mejor opción</span><span class="kv good">${rR.rent>rF.rent?'🌾 Recría':'🏗 Feedlot'}</span></div></div>`:det(r)}`;
 }
 
-function vL(id) {
-  const l = D.lotes.find(x => x.id === id); if (!l) return;
-  const d = dias(l.fi), p = Math.min((l.wa / D.cfg.obj) * 100, 100);
-  const kgG = D.cfg.obj - l.wa, adpv = l.e==='Feedlot'?D.cfg.adft:D.cfg.adrc, dO = Math.round(kgG/adpv);
-  const pesadasLote = D.pesadas.filter(x => x.lote === l.c).sort((a,b) => new Date(b.fecha)-new Date(a.fecha));
-  $('sc').innerHTML = `
-<div class="header"><div style="display:flex;align-items:center;gap:10px">
-<button onclick="nav('lotes')" style="background:none;border:none;color:var(--green);font-size:20px;cursor:pointer;padding:0">←</button>
-<div><div class="header-sub">${l.e}</div><div class="header-title">${l.c}</div></div></div></div>
+function vL(id){
+  const l=D.lotes.find(x=>x.id===id);if(!l)return;
+  const d=dias(l.fi),p=Math.min((l.wa/D.cfg.obj)*100,100);
+  const kgG=D.cfg.obj-l.wa,adpv=l.e==='Feedlot'?D.cfg.adft:D.cfg.adrc,dO=Math.round(kgG/adpv);
+  const ps=D.pesadas.filter(x=>x.lote===l.c).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+  $('sc').innerHTML=`
+<div class="header"><div style="display:flex;align-items:center;gap:10px"><button onclick="nav('lotes')" style="background:none;border:none;color:var(--green);font-size:20px;cursor:pointer;padding:0">←</button><div><div class="header-sub">${l.e}</div><div class="header-title">${l.c}</div></div></div></div>
 <div class="metrics" style="padding-top:16px">
 <div class="metric"><div class="metric-icon">${l.e==='Recría'?'🌾':'🏗'}</div><div class="metric-val">${l.n}</div><div class="metric-label">Animales</div></div>
-<div class="metric"><div class="metric-icon">⚖️</div><div class="metric-val">${l.wa}</div><div class="metric-label">Kg actuales</div><div class="metric-sub">${l.lp ? 'pesada '+l.lp : 'estimado'}</div></div>
+<div class="metric"><div class="metric-icon">⚖️</div><div class="metric-val">${l.wa}</div><div class="metric-label">Kg actuales</div><div class="metric-sub">${l.lp?'pesada '+l.lp:'estimado'}</div></div>
 <div class="metric"><div class="metric-icon">📅</div><div class="metric-val">${d}</div><div class="metric-label">Días</div><div class="metric-sub">en sistema</div></div>
 <div class="metric"><div class="metric-icon">🎯</div><div class="metric-val">${dO}</div><div class="metric-label">Días al obj.</div><div class="metric-sub">${D.cfg.obj}kg</div></div>
 </div>
-<div class="stitle">Progreso al objetivo</div>
+<div class="stitle">Progreso</div>
 <div style="margin:0 18px 12px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px">
 <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--text3)">Entrada: ${l.we}kg</span><span style="font-size:12px;color:var(--text3)">Objetivo: ${D.cfg.obj}kg</span></div>
 <div class="prog" style="height:8px;margin-bottom:8px"><div class="pf" style="width:${p}%"></div></div>
@@ -537,34 +442,26 @@ function vL(id) {
 </div>
 <div class="stitle">Costos</div>
 <div class="kb">
-<div class="kr"><span class="kk">Costo compra total</span><span class="kv">${fmt(l.cc)}</span></div>
+<div class="kr"><span class="kk">Costo compra</span><span class="kv">${fmt(l.cc)}</span></div>
 <div class="kr"><span class="kk">Costo/animal</span><span class="kv">${fmt(l.cc/l.n)}</span></div>
-<div class="kr"><span class="kk">Fecha ingreso</span><span class="kv">${l.fi ? new Date(l.fi).toLocaleDateString('es-AR') : '—'}</span></div>
+<div class="kr"><span class="kk">Fecha ingreso</span><span class="kv">${l.fi?new Date(l.fi+'T12:00:00').toLocaleDateString('es-AR'):'—'}</span></div>
 </div>
-${pesadasLote.length > 0 ? `
-<div class="stitle">Historial pesadas</div>
-<div class="pesadas-list">
-${pesadasLote.slice(0,5).map(p => `<div class="pesada-item"><div class="pesada-left">${p.peso}kg prom · ${p.cant} animales</div><div class="pesada-right">${p.fecha}<br><span style="font-size:10px;color:var(--text3)">${p.estimado?'estimado':'real'}</span></div></div>`).join('')}
-</div>` : ''}
+${ps.length>0?`<div class="stitle">Pesadas</div>${ps.slice(0,5).map(p=>`<div class="pesada-item"><div style="font-size:13px">${p.peso}kg · ${p.cant} animales</div><div style="font-size:11px;color:var(--text3);text-align:right">${p.fecha}</div></div>`).join('')}`:''}
 <div style="padding:8px 0"></div>`;
 }
 
-function nav(s) { cur = s; render(); }
+function nav(s){cur=s;render()}
+const NAV=[{id:"dashboard",icon:"🏠",l:"Inicio"},{id:"lotes",icon:"🐄",l:"Lotes"},{id:"carga",icon:"➕",l:"Cargar"},{id:"kpis",icon:"📊",l:"KPIs"},{id:"evaluador",icon:"🧮",l:"Feria"}];
 
-const NAV = [{id:"dashboard",icon:"🏠",l:"Inicio"},{id:"lotes",icon:"🐄",l:"Lotes"},{id:"carga",icon:"➕",l:"Cargar"},{id:"kpis",icon:"📊",l:"KPIs"},{id:"evaluador",icon:"🧮",l:"Feria"}];
-
-function render() {
-  const sc = {dashboard:sDB,lotes:sLotes,carga:sCarga,kpis:sKPIs,evaluador:sEval};
-  $('sc').innerHTML = (sc[cur]||sDB)();
-  $('nav').innerHTML = NAV.map(n => `<button class="nav-btn ${cur===n.id?'active':''}" onclick="nav('${n.id}')"><span class="nav-icon">${n.icon}</span><span class="nav-label">${n.l}</span></button>`).join('');
+function render(){
+  const sc={dashboard:sDB,lotes:sLotes,carga:sCarga,kpis:sKPIs,evaluador:sEval};
+  $('sc').innerHTML=(sc[cur]||sDB)();
+  $('nav').innerHTML=NAV.map(n=>`<button class="nav-btn ${cur===n.id?'active':''}" onclick="nav('${n.id}')"><span class="nav-icon">${n.icon}</span><span class="nav-label">${n.l}</span></button>`).join('');
 }
 
-// Arrancar
 render();
-sincronizarDesdeSheet();
-
-// Auto-sync cada 5 minutos
-setInterval(sincronizarDesdeSheet, 5 * 60 * 1000);
+sync();
+setInterval(sync, 5*60*1000);
 </script>
 </body>
 </html>
